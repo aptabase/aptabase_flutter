@@ -27,6 +27,7 @@ class Aptabase {
   Aptabase._();
   static final instance = Aptabase._();
 
+  /// Initializes the Aptabase SDK with the given appKey.
   static Future init(String appKey) async {
     _appKey = appKey;
 
@@ -60,6 +61,7 @@ class Aptabase {
     return _sessionId;
   }
 
+  /// Records an event with the given name and optional properties.
   Future<void> trackEvent(String eventName, [Map<String, dynamic>? props]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
