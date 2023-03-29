@@ -1,6 +1,10 @@
+import 'package:aptabase_flutter/aptabase_flutter.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Aptabase.init("A-DEV-0000000000");
+
   runApp(const MyApp());
 }
 
@@ -51,6 +55,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
+    Aptabase.instance.trackEvent("increment", { "counter": _counter });
+    
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
