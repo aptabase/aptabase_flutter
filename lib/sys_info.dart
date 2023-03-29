@@ -45,7 +45,9 @@ class SystemInfo {
     if (Platform.isAndroid) {
       return "Android";
     } else if (Platform.isIOS) {
-      return "iOS";
+      final info = await deviceInfo.iosInfo;
+      final iPad = info.model?.toLowerCase().contains("ipad") ?? false;
+      return iPad ? "iPadOS" : "iOS";
     } else if (Platform.isMacOS) {
       return "macOS";
     } else  if (Platform.isWindows) {
