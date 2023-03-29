@@ -1,3 +1,4 @@
 ## 0.0.1
 
-* TODO: Describe initial release.
+* Initial release of the Flutter SDK
+* Added ability to initialized the SDK and publish events
