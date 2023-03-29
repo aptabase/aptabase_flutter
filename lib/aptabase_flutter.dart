@@ -17,7 +17,7 @@ class Aptabase {
   static final instance = Aptabase._();
 
   static Future init(String appKey) async {
-    developer.log("Aptabase initialized with App Key: $appKey");
+    developer.log("Aptabase initialized with App Key: $appKey"); // TODO Remove this
     
     _appKey = appKey;
 
