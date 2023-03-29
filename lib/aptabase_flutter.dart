@@ -1,4 +1,7 @@
+
+/// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
 library aptabase_flutter;
+
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -7,8 +10,8 @@ import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
 
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.1";
-  static const Duration _sessionTimeout = Duration(seconds: 10);
+  static const String _sdkVersion = "aptabase_flutter@0.0.2";
+  static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {
     'EU': "https://api-eu.aptabase.com",
@@ -33,13 +36,15 @@ class Aptabase {
 
     var parts = _appKey.split("-");
     if (parts.length != 3) {
-      developer.log('The Aptabase appKey "$_appKey" is invalid. Tracking will be disabled.');
+      developer.log(
+          'The Aptabase appKey "$_appKey" is invalid. Tracking will be disabled.');
       return;
     }
 
     _sysInfo = await SystemInfo.get();
     if (_sysInfo == null) {
-      developer.log('This environment is not supported by Aptabase SDK. Tracking will be disabled.');
+      developer.log(
+          'This environment is not supported by Aptabase SDK. Tracking will be disabled.');
       return;
     }
 
@@ -62,7 +67,8 @@ class Aptabase {
   }
 
   /// Records an event with the given name and optional properties.
-  Future<void> trackEvent(String eventName, [Map<String, dynamic>? props]) async {
+  Future<void> trackEvent(String eventName,
+      [Map<String, dynamic>? props]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
@@ -70,16 +76,17 @@ class Aptabase {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
-      request.headers.set(HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      request.headers.set(
+          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
 
       final systemProps = {
-          "osName": _sysInfo!.osName,
-          "osVersion": _sysInfo!.osVersion,
-          "locale": _sysInfo!.locale,
-          "appVersion": _sysInfo!.appVersion,
-          "appBuildNumber": _sysInfo!.buildNumber,
-          "sdkVersion": _sdkVersion,
-        };
+        "osName": _sysInfo!.osName,
+        "osVersion": _sysInfo!.osVersion,
+        "locale": _sysInfo!.locale,
+        "appVersion": _sysInfo!.appVersion,
+        "appBuildNumber": _sysInfo!.buildNumber,
+        "sdkVersion": _sdkVersion,
+      };
 
       final body = json.encode({
         "timestamp": DateTime.now().toUtc().toIso8601String(),
@@ -94,9 +101,9 @@ class Aptabase {
 
       if (kDebugMode && response.statusCode >= 300) {
         final body = await response.transform(utf8.decoder).join();
-        developer.log('trackEvent failed with status code ${response.statusCode}: $body');
+        developer.log(
+            'trackEvent failed with status code ${response.statusCode}: $body');
       }
-
     } on Exception catch (e, st) {
       if (kDebugMode) {
         developer.log('Exception $e: $st');

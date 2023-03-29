@@ -1,4 +1,3 @@
-
 library aptabase_flutter;
 
 import 'dart:io';
@@ -7,19 +6,18 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SystemInfo {
-   String osName; 
-   String osVersion; 
-   String appVersion; 
-   String buildNumber; 
-   String locale; 
+  String osName;
+  String osVersion;
+  String appVersion;
+  String buildNumber;
+  String locale;
 
-  SystemInfo._({
-    required this.osName,
-    required this.osVersion,
-    required this.locale,
-    required this.buildNumber,
-    required this.appVersion
-  });
+  SystemInfo._(
+      {required this.osName,
+      required this.osVersion,
+      required this.locale,
+      required this.buildNumber,
+      required this.appVersion});
 
   static Future<SystemInfo?> get() async {
     final deviceInfo = DeviceInfoPlugin();
@@ -33,12 +31,11 @@ class SystemInfo {
     final osVersion = await _getOsVersion(deviceInfo);
 
     return SystemInfo._(
-      osName: osName,
-      osVersion: osVersion,
-      locale: Platform.localeName,
-      buildNumber: packageInfo.buildNumber,
-      appVersion: packageInfo.version
-    );
+        osName: osName,
+        osVersion: osVersion,
+        locale: Platform.localeName,
+        buildNumber: packageInfo.buildNumber,
+        appVersion: packageInfo.version);
   }
 
   static Future<String?> _getOsName(DeviceInfoPlugin deviceInfo) async {
@@ -50,9 +47,9 @@ class SystemInfo {
       return iPad ? "iPadOS" : "iOS";
     } else if (Platform.isMacOS) {
       return "macOS";
-    } else  if (Platform.isWindows) {
+    } else if (Platform.isWindows) {
       return "Windows";
-    } else  if (Platform.isLinux) {
+    } else if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return info.name;
     }
@@ -65,22 +62,22 @@ class SystemInfo {
       final info = await deviceInfo.androidInfo;
       return info.version.release;
     }
-    
+
     if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
       return info.systemVersion ?? '';
     }
-    
+
     if (Platform.isMacOS) {
       // TODO: wait for https://github.com/fluttercommunity/plus_plugins/pull/1649
       return '';
     }
-    
+
     if (Platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
       return '${info.majorVersion}.${info.minorVersion}.${info.buildNumber}';
     }
-    
+
     if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return info.versionId ?? '';
