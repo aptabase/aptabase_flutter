@@ -9,7 +9,7 @@ import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
 
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.3";
+  static const String _sdkVersion = "aptabase_flutter@0.0.4";
   static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {
