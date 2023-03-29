@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  aptabase_flutter:
+    path: ../
 
 
   # The following adds the Cupertino Icons font to your application.
