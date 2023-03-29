@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Lower requirement of Dart SDK to >=2.12.0
+
 ## 0.0.3
 
 * Add example
