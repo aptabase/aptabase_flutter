@@ -37,7 +37,7 @@ class SystemInfo {
       osVersion: osVersion,
       locale: Platform.localeName,
       buildNumber: packageInfo.buildNumber,
-      appVersion: packageInfo.version,
+      appVersion: packageInfo.version
     );
   }
 

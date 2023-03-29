@@ -6,7 +6,9 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 
 class Aptabase {
-  static const Map<String, String> REGIONS = {
+  static const String _sdkVersion = "aptabase_flutter@0.0.1";
+
+  static const Map<String, String> _regions = {
     'EU': "https://api-eu.aptabase.com",
     'US': "https://api-us.aptabase.com",
     'DEV': "http://localhost:5251",
@@ -36,7 +38,7 @@ class Aptabase {
     }
 
     var region = parts[1];
-    var baseUrl = REGIONS[region] ?? REGIONS["DEV"];
+    var baseUrl = _regions[region] ?? _regions["DEV"];
     _apiUrl = Uri.parse('$baseUrl/v0/event');
   }
 
@@ -56,7 +58,7 @@ class Aptabase {
           "locale": _sysInfo!.locale,
           "appVersion": _sysInfo!.appVersion,
           "appBuildNumber": _sysInfo!.buildNumber,
-          "sdkVersion": "aptabase_flutter@0.0.0",
+          "sdkVersion": _sdkVersion,
         };
 
       final body = json.encode({
