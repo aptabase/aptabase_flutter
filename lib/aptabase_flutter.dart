@@ -36,7 +36,7 @@ class Aptabase {
     var parts = _appKey.split("-");
     if (parts.length != 3) {
       developer.log(
-          'The Aptabase appKey "$_appKey" is invalid. Tracking will be disabled.');
+          'The Aptabase App Key "$_appKey" is invalid. Tracking will be disabled.');
       return;
     }
 
