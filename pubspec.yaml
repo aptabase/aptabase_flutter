@@ -1,7 +1,7 @@
 name: aptabase_flutter
-description: A new Flutter package project.
+description: "Flutter SDK for Aptabase: Privacy-first and simple analytics for apps"
 version: 0.0.1
-homepage:
+homepage: https://aptabase.com
 
 environment:
   sdk: '>=2.19.5 <3.0.0'
