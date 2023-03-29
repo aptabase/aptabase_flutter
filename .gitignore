@@ -29,4 +29,7 @@ migrate_working_dir/
 .packages
 build/
 ios/Flutter
+linux/flutter/ephemeral/.plugin_symlinks
 android/local.properties
+.flutter-plugins
+.flutter-plugins-dependencies
