@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'package:uuid/uuid.dart';
 
 class Aptabase {
   static const String _sdkVersion = "aptabase_flutter@0.0.1";
+  static const Duration _sessionTimeout = Duration(seconds: 10);
 
   static const Map<String, String> _regions = {
     'EU': "https://api-eu.aptabase.com",
@@ -15,9 +17,12 @@ class Aptabase {
   };
 
   static final http = HttpClient();
+  static const uuid = Uuid();
   static SystemInfo? _sysInfo;
   static String _appKey = "";
   static Uri? _apiUrl;
+  static String _sessionId = uuid.v4();
+  static DateTime _lastTouchTs = DateTime.now().toUtc();
 
   Aptabase._();
   static final instance = Aptabase._();
@@ -42,6 +47,19 @@ class Aptabase {
     _apiUrl = Uri.parse('$baseUrl/v0/event');
   }
 
+  /// Returns the session id for the current session.
+  /// If the session is too old, a new session id is generated.
+  String _evalSessionId() {
+    final now = DateTime.now().toUtc();
+    final elapsed = now.difference(_lastTouchTs);
+    if (elapsed > _sessionTimeout) {
+      _sessionId = uuid.v4();
+    }
+
+    _lastTouchTs = now;
+    return _sessionId;
+  }
+
   Future<void> trackEvent(String eventName, [Map<String, dynamic>? props]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
@@ -63,7 +81,7 @@ class Aptabase {
 
       final body = json.encode({
         "timestamp": DateTime.now().toUtc().toIso8601String(),
-        "sessionId": "123", // TODO ??
+        "sessionId": _evalSessionId(),
         "eventName": eventName,
         "systemProps": systemProps,
         "props": props,
