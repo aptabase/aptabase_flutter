@@ -91,6 +91,7 @@ class Aptabase {
 
       request.write(body);
       final response = await request.close();
+
       if (kDebugMode && response.statusCode >= 300) {
         final body = await response.transform(utf8.decoder).join();
         developer.log('trackEvent failed with status code ${response.statusCode}: $body');
