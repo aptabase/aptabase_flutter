@@ -1,3 +1,7 @@
+## 0.0.3
+
+* Add example
+
 ## 0.0.2
 
 * Run `flutter format` on the codebase
