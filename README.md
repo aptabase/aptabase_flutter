@@ -1,3 +1,5 @@
+![Aptabase](https://aptabase.com/og.png)
+
 # aptabase_flutter
 
 [![pub package](https://img.shields.io/pub/v/aptabase_flutter.svg)](https://pub.dev/packages/aptabase_flutter)
