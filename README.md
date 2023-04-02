@@ -13,7 +13,7 @@ Instrument your app Aptabase, a privacy-first and simple analytics platform for 
 | :-----: | :-: | :---: | :-: | :---: | :-----: |
 |   ✔️    | ✔️  |  ✔️   | ❌  |  ✔️   |   ✔️    |
 
-# Install
+## Install
 
 You can install the SDK by running the following command:
 
@@ -21,7 +21,7 @@ You can install the SDK by running the following command:
 pub add aptabase_flutter
 ```
 
-# Usage
+## Usage
 
 First you need to get your `App Key` from Aptabase, you can find it in the `Instructions` menu on the left side menu.
 
