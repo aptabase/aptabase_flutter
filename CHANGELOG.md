@@ -1,3 +1,8 @@
+## 0.0.5
+
+* Add a default User-Agent header
+* Add more documentation to public methods
+
 ## 0.0.4
 
 * Lower requirement of Dart SDK to >=2.12.0

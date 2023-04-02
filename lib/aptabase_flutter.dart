@@ -8,8 +8,11 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
 
+/// Aptabase Client for Flutter
+///
+/// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.4";
+  static const String _sdkVersion = "aptabase_flutter@0.0.5";
   static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {
@@ -75,8 +78,8 @@ class Aptabase {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
-      request.headers.set(
-          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      request.headers.set(HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
 
       final systemProps = {
         "osName": _sysInfo!.osName,

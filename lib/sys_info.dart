@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+/// System information about the current device.
 class SystemInfo {
   String osName;
   String osVersion;
@@ -17,6 +18,7 @@ class SystemInfo {
       required this.buildNumber,
       required this.appVersion});
 
+  /// Returns the system information for the current device.
   static Future<SystemInfo?> get() async {
     final deviceInfo = DeviceInfoPlugin();
     final packageInfo = await PackageInfo.fromPlatform();
@@ -36,6 +38,7 @@ class SystemInfo {
         appVersion: packageInfo.version);
   }
 
+  /// Returns the name of the operating system.
   static Future<String?> _getOsName(DeviceInfoPlugin deviceInfo) async {
     if (Platform.isAndroid) {
       return "Android";
@@ -55,6 +58,7 @@ class SystemInfo {
     return null;
   }
 
+  /// Returns the version of the operating system.
   static Future<String> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
     if (Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
