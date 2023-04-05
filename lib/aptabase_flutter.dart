@@ -3,7 +3,7 @@ library aptabase_flutter;
 
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
@@ -21,7 +21,7 @@ class Aptabase {
     'DEV': "http://localhost:5251",
   };
 
-  static final http = HttpClient();
+  static final http = newUniversalHttpClient();
   static const uuid = Uuid();
   static SystemInfo? _sysInfo;
   static String _appKey = "";
@@ -78,7 +78,8 @@ class Aptabase {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
-      request.headers.set(HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      request.headers.set(
+          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
       request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
 
       final systemProps = {

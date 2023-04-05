@@ -1,3 +1,8 @@
+## 0.0.6
+
+* Add web support
+* Address small nitpicks and formatting changes
+
 ## 0.0.5
 
 * Add a default User-Agent header
