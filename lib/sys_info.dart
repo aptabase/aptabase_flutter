@@ -20,7 +20,16 @@ class SystemInfo {
     required this.appVersion,
   });
 
+  static const String _kAndroidOsName = 'Android';
+  static const String _kIPadOsName = 'iPadOS';
+  static const String _kIPhoneOsName = 'iOS';
+  static const String _kMacOsName = 'macOS';
+  static const String _kWindowsOsName = 'Windows';
+  static const String _kWebOsName = '';
+  static const String _kWebOsVersion = '';
+
   static const String _kUnknownOsVersion = '';
+  static const String _kIpadModelString = 'ipad';
 
   /// Returns the system information for the current device.
   static Future<SystemInfo?> get() async {
@@ -46,17 +55,18 @@ class SystemInfo {
   /// Returns the name of the operating system.
   static Future<String?> _getOsName(DeviceInfoPlugin deviceInfo) async {
     if (kIsWeb) {
-      return "Web";
+      return _kWebOsName;
     } else if (Platform.isAndroid) {
-      return "Android";
+      return _kAndroidOsName;
     } else if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      final iPad = info.model?.toLowerCase().contains("ipad") ?? false;
-      return iPad ? "iPadOS" : "iOS";
+      final iPad =
+          info.model?.toLowerCase().contains(_kIpadModelString) ?? false;
+      return iPad ? _kIPadOsName : _kIPhoneOsName;
     } else if (Platform.isMacOS) {
-      return "macOS";
+      return _kMacOsName;
     } else if (Platform.isWindows) {
-      return "Windows";
+      return _kWindowsOsName;
     } else if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return info.name;
@@ -68,8 +78,7 @@ class SystemInfo {
   /// Returns the version of the operating system.
   static Future<String> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
     if (kIsWeb) {
-      final info = await deviceInfo.webBrowserInfo;
-      return info.vendorSub ?? _kUnknownOsVersion;
+      return _kWebOsVersion;
     }
 
     if (Platform.isAndroid) {
