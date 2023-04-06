@@ -33,3 +33,4 @@ linux/flutter/ephemeral/.plugin_symlinks
 android/local.properties
 .flutter-plugins
 .flutter-plugins-dependencies
+.fvm

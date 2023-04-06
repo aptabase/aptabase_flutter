@@ -11,7 +11,7 @@ Instrument your app Aptabase, a privacy-first and simple analytics platform for 
 
 | Android | iOS | MacOS | Web | Linux | Windows |
 | :-----: | :-: | :---: | :-: | :---: | :-----: |
-|   ✔️    | ✔️  |  ✔️   | ❌  |  ✔️   |   ✔️    |
+|   ✔️    | ✔️  |  ✔️   | ✔️  |  ✔️   |   ✔️    |
 
 ## Install
 

@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:universal_io/io.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// System information about the current device.
@@ -11,12 +12,24 @@ class SystemInfo {
   String buildNumber;
   String locale;
 
-  SystemInfo._(
-      {required this.osName,
-      required this.osVersion,
-      required this.locale,
-      required this.buildNumber,
-      required this.appVersion});
+  SystemInfo._({
+    required this.osName,
+    required this.osVersion,
+    required this.locale,
+    required this.buildNumber,
+    required this.appVersion,
+  });
+
+  static const String _kAndroidOsName = 'Android';
+  static const String _kIPadOsName = 'iPadOS';
+  static const String _kIPhoneOsName = 'iOS';
+  static const String _kMacOsName = 'macOS';
+  static const String _kWindowsOsName = 'Windows';
+  static const String _kWebOsName = '';
+  static const String _kWebOsVersion = '';
+
+  static const String _kUnknownOsVersion = '';
+  static const String _kIpadModelString = 'ipad';
 
   /// Returns the system information for the current device.
   static Future<SystemInfo?> get() async {
@@ -31,25 +44,29 @@ class SystemInfo {
     final osVersion = await _getOsVersion(deviceInfo);
 
     return SystemInfo._(
-        osName: osName,
-        osVersion: osVersion,
-        locale: Platform.localeName,
-        buildNumber: packageInfo.buildNumber,
-        appVersion: packageInfo.version);
+      osName: osName,
+      osVersion: osVersion,
+      locale: Platform.localeName,
+      buildNumber: packageInfo.buildNumber,
+      appVersion: packageInfo.version,
+    );
   }
 
   /// Returns the name of the operating system.
   static Future<String?> _getOsName(DeviceInfoPlugin deviceInfo) async {
-    if (Platform.isAndroid) {
-      return "Android";
+    if (kIsWeb) {
+      return _kWebOsName;
+    } else if (Platform.isAndroid) {
+      return _kAndroidOsName;
     } else if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      final iPad = info.model?.toLowerCase().contains("ipad") ?? false;
-      return iPad ? "iPadOS" : "iOS";
+      final iPad =
+          info.model?.toLowerCase().contains(_kIpadModelString) ?? false;
+      return iPad ? _kIPadOsName : _kIPhoneOsName;
     } else if (Platform.isMacOS) {
-      return "macOS";
+      return _kMacOsName;
     } else if (Platform.isWindows) {
-      return "Windows";
+      return _kWindowsOsName;
     } else if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return info.name;
@@ -60,6 +77,10 @@ class SystemInfo {
 
   /// Returns the version of the operating system.
   static Future<String> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
+    if (kIsWeb) {
+      return _kWebOsVersion;
+    }
+
     if (Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
       return info.version.release;
@@ -67,12 +88,12 @@ class SystemInfo {
 
     if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      return info.systemVersion ?? '';
+      return info.systemVersion ?? _kUnknownOsVersion;
     }
 
     if (Platform.isMacOS) {
       // TODO: wait for https://github.com/fluttercommunity/plus_plugins/pull/1649
-      return '';
+      return _kUnknownOsVersion;
     }
 
     if (Platform.isWindows) {
@@ -82,9 +103,9 @@ class SystemInfo {
 
     if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
-      return info.versionId ?? '';
+      return info.versionId ?? _kUnknownOsVersion;
     }
 
-    return '';
+    return _kUnknownOsVersion;
   }
 }

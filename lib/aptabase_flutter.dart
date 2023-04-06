@@ -3,7 +3,7 @@ library aptabase_flutter;
 
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
@@ -12,7 +12,7 @@ import 'package:uuid/uuid.dart';
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.5";
+  static const String _sdkVersion = "aptabase_flutter@0.0.6";
   static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {
@@ -21,7 +21,7 @@ class Aptabase {
     'DEV': "http://localhost:5251",
   };
 
-  static final http = HttpClient();
+  static final http = newUniversalHttpClient();
   static const uuid = Uuid();
   static SystemInfo? _sysInfo;
   static String _appKey = "";
@@ -69,8 +69,10 @@ class Aptabase {
   }
 
   /// Records an event with the given name and optional properties.
-  Future<void> trackEvent(String eventName,
-      [Map<String, dynamic>? props]) async {
+  Future<void> trackEvent(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
@@ -78,8 +80,12 @@ class Aptabase {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
-      request.headers.set(HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
-      request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
+      request.headers.set(
+          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+
+      if (!kIsWeb) {
+        request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
+      }
 
       final systemProps = {
         "osName": _sysInfo!.osName,
