@@ -1,3 +1,7 @@
+## 0.0.7
+
+* Update to new URL for the API
+
 ## 0.0.6
 
 * Add web support

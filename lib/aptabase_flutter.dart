@@ -12,13 +12,13 @@ import 'package:uuid/uuid.dart';
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.6";
+  static const String _sdkVersion = "aptabase_flutter@0.0.7";
   static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {
-    'EU': "https://api-eu.aptabase.com",
-    'US': "https://api-us.aptabase.com",
-    'DEV': "http://localhost:5251",
+    'EU': "https://eu.aptabase.com",
+    'US': "https://us.aptabase.com",
+    'DEV': "http://localhost:3000",
   };
 
   static final http = newUniversalHttpClient();
@@ -52,7 +52,7 @@ class Aptabase {
 
     var region = parts[1];
     var baseUrl = _regions[region] ?? _regions["DEV"];
-    _apiUrl = Uri.parse('$baseUrl/v0/event');
+    _apiUrl = Uri.parse('$baseUrl/api/v0/event');
   }
 
   /// Returns the session id for the current session.
