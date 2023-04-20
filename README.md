@@ -5,7 +5,7 @@
 [![pub package](https://img.shields.io/pub/v/aptabase_flutter.svg)](https://pub.dev/packages/aptabase_flutter)
 [![pub points](https://img.shields.io/pub/points/aptabase_flutter?color=2E8B57&label=pub%20points)](https://pub.dev/packages/aptabase_flutter/score)
 
-Instrument your app with Aptabase, an Open Source Privacy-First and Simple Analytics for Mobile, Desktop and Web Apps.
+Instrument your app with Aptabase, an Open Source, Privacy-First and Simple Analytics for Mobile, Desktop and Web Apps.
 
 ## Platform Support
 
