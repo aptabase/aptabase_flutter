@@ -12,7 +12,7 @@ import 'package:uuid/uuid.dart';
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.7";
+  static const String _sdkVersion = "aptabase_flutter@0.0.8";
   static const Duration _sessionTimeout = Duration(hours: 4);
 
   static const Map<String, String> _regions = {

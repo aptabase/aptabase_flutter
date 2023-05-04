@@ -1,3 +1,7 @@
+## 0.0.8
+
+* Enhance logs with macOS version
+
 ## 0.0.7
 
 * Update to new URL for the API

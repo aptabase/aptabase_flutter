@@ -92,8 +92,8 @@ class SystemInfo {
     }
 
     if (Platform.isMacOS) {
-      // TODO: wait for https://github.com/fluttercommunity/plus_plugins/pull/1649
-      return _kUnknownOsVersion;
+      final info = await deviceInfo.macOsInfo;
+      return '${info.majorVersion}.${info.minorVersion}.${info.patchVersion}';
     }
 
     if (Platform.isWindows) {
