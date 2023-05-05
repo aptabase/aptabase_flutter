@@ -8,17 +8,25 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:uuid/uuid.dart';
 
+/// Additional options for initializing the Aptabase SDK.
+class InitOptions {
+  final String? host;
+  
+  const InitOptions({this.host});
+}
+
 /// Aptabase Client for Flutter
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.0.8";
-  static const Duration _sessionTimeout = Duration(hours: 4);
+  static const String _sdkVersion = "aptabase_flutter@0.0.9";
+  static const Duration _sessionTimeout = Duration(hours: 1);
 
-  static const Map<String, String> _regions = {
+  static const Map<String, String> _hosts = {
     'EU': "https://eu.aptabase.com",
     'US': "https://us.aptabase.com",
     'DEV': "http://localhost:3000",
+    'SH': ""
   };
 
   static final http = newUniversalHttpClient();
@@ -33,11 +41,11 @@ class Aptabase {
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
-  static Future init(String appKey) async {
+  static Future init(String appKey, [InitOptions? opts]) async {
     _appKey = appKey;
 
     var parts = _appKey.split("-");
-    if (parts.length != 3) {
+    if (parts.length != 3 || _hosts[parts[1]] == null) {
       developer.log(
           'The Aptabase App Key "$_appKey" is invalid. Tracking will be disabled.');
       return;
@@ -51,8 +59,7 @@ class Aptabase {
     }
 
     var region = parts[1];
-    var baseUrl = _regions[region] ?? _regions["DEV"];
-    _apiUrl = Uri.parse('$baseUrl/api/v0/event');
+    _apiUrl = _getApiUrl(region, opts);
   }
 
   /// Returns the session id for the current session.
@@ -117,5 +124,20 @@ class Aptabase {
         developer.log('Exception $e: $st');
       }
     }
+  }
+
+  /// Returns the API URL for the given region.
+  static Uri? _getApiUrl(String region, InitOptions? opts) {
+    var baseUrl = _hosts[region]!;
+    if (region == "SH") {
+      if (opts?.host != null) {
+        baseUrl = opts!.host!;
+      } else {
+        developer.log('Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
+        return null;
+      }
+    }
+
+    return Uri.parse('$baseUrl/api/v0/event');
   }
 }

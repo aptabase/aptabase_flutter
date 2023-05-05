@@ -1,3 +1,8 @@
+## 0.0.9
+
+* Support for self hosted instances
+* Reduce session timeout to 1 hour to match the other SDKs
+
 ## 0.0.8
 
 * Enhance logs with macOS version
