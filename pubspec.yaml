@@ -1,6 +1,6 @@
 name: aptabase_flutter
 description: "Flutter SDK for Aptabase: Open Source Privacy-First and Simple Analytics for Mobile, Desktop and Web Apps"
-version: 0.0.9
+version: 0.0.10
 homepage: https://aptabase.com
 repository: https://github.com/aptabase/aptabase_flutter
 issue_tracker: https://github.com/aptabase/aptabase_flutter/issues

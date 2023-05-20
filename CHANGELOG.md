@@ -1,3 +1,7 @@
+## 0.0.10
+
+* Added support for automatic segregation of Debug/Release data source
+
 ## 0.0.9
 
 * Support for self hosted instances
