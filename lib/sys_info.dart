@@ -45,7 +45,7 @@ class SystemInfo {
 
     return SystemInfo._(
       osName: osName,
-      osVersion: osVersion,
+      osVersion: osVersion ?? '',
       locale: Platform.localeName,
       buildNumber: packageInfo.buildNumber,
       appVersion: packageInfo.version,
@@ -76,7 +76,7 @@ class SystemInfo {
   }
 
   /// Returns the version of the operating system.
-  static Future<String> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
+  static Future<String?> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
     if (kIsWeb) {
       return _kWebOsVersion;
     }
@@ -93,12 +93,13 @@ class SystemInfo {
 
     if (Platform.isMacOS) {
       final info = await deviceInfo.macOsInfo;
-      return '${info.majorVersion}.${info.minorVersion}.${info.patchVersion}';
+      return info
+          .kernelVersion; //'${info.majorVersion}.${info.minorVersion}.${info.patchVersion}';
     }
 
     if (Platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
-      return '${info.majorVersion}.${info.minorVersion}.${info.buildNumber}';
+      return 'na on windows'; //'${info.majorVersion}.${info.minorVersion}.${info.buildNumber}';
     }
 
     if (Platform.isLinux) {
