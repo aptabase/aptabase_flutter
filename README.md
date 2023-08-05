@@ -5,7 +5,7 @@
 [![pub package](https://img.shields.io/pub/v/aptabase_flutter.svg)](https://pub.dev/packages/aptabase_flutter)
 [![pub points](https://img.shields.io/pub/points/aptabase_flutter?color=2E8B57&label=pub%20points)](https://pub.dev/packages/aptabase_flutter/score)
 
-Instrument your app with Aptabase, an Open Source, Privacy-First and Simple Analytics for Mobile, Desktop and Web Apps.
+Instrument your app with Aptabase, an Open Source, Privacy-First, and Simple Analytics for Mobile, Desktop, and Web Apps.
 
 ## Platform Support
 
@@ -23,7 +23,7 @@ pub add aptabase_flutter
 
 ## Usage
 
-First you need to get your `App Key` from Aptabase, you can find it in the `Instructions` menu on the left side menu.
+First, you need to get your `App Key` from Aptabase, you can find it in the `Instructions` menu on the left side menu.
 
 On your `main.dart`, import `package:aptabase_flutter/aptabase_flutter.dart` and initialized the SDK.
 
@@ -38,7 +38,7 @@ void main() async {
 
 `Note:` You need to change your main function to be `async` and call `WidgetsFlutterBinding.ensureInitialized();` before initializing the SDK.
 
-Afterwards you can start tracking events with `Aptabase.instance`:
+Afterward, you can start tracking events with `Aptabase.instance`:
 
 ```dart
 import 'package:aptabase_flutter/aptabase_flutter.dart';
@@ -67,7 +67,7 @@ A few important notes:
 1. The SDK will automatically enhance the event with some useful information, like the OS, the app version, and other things.
 2. You're in control of what gets sent to Aptabase. This SDK does not automatically track any events, you need to call `trackEvent` manually.
     - Because of this, it's generally recommended to at least track an event at startup
-3. You do not need to await the `trackEvent` function, it'll run in the background.
+3. You do not need to await for the `trackEvent` function, it'll run in the background.
 3. Only strings and numbers values are allowed on custom properties
 
 ## Preparing for Submission to Apple App Store
