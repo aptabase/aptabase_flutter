@@ -60,8 +60,7 @@ class SystemInfo {
       return _kAndroidOsName;
     } else if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      final iPad =
-          info.model?.toLowerCase().contains(_kIpadModelString) ?? false;
+      final iPad = info.model.toLowerCase().contains(_kIpadModelString);
       return iPad ? _kIPadOsName : _kIPhoneOsName;
     } else if (Platform.isMacOS) {
       return _kMacOsName;
@@ -88,7 +87,7 @@ class SystemInfo {
 
     if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      return info.systemVersion ?? _kUnknownOsVersion;
+      return info.systemVersion;
     }
 
     if (Platform.isMacOS) {
