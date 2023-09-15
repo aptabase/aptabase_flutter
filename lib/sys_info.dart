@@ -98,7 +98,7 @@ class SystemInfo {
     }
 
     if (Platform.isWindows) {
-      final info = await deviceInfo.windowsInfo;
+      // final info = await deviceInfo.windowsInfo;
       return 'na on windows'; //'${info.majorVersion}.${info.minorVersion}.${info.buildNumber}';
     }
 
