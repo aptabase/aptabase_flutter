@@ -1,3 +1,7 @@
+## 0.1.0
+
+* Update dependencies
+
 ## 0.0.10
 
 * Added support for automatic segregation of Debug/Release data source
