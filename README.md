@@ -38,27 +38,22 @@ void main() async {
 
 `Note:` You need to change your main function to be `async` and call `WidgetsFlutterBinding.ensureInitialized();` before initializing the SDK.
 
-Afterward, you can start tracking events with `Aptabase.instance`:
+Afterward, you can start tracking events with `Aptabase.instance` anywhere in your Dart. Here's an example:
 
 ```dart
 import 'package:aptabase_flutter/aptabase_flutter.dart';
 
-// Tracking how many times the user has clicked the button
-void _incrementCounter() {
-  Aptabase.instance.trackEvent("increment"); 
-  
-  setState(() {
-    _counter++;
-  });
-}
+class _CounterState extends State<Counter> {
+  int _counter = 0;
 
-// Same as above, but with a custom property
-void _incrementCounter() {
-  Aptabase.instance.trackEvent("increment", { "counter": _counter });
-  
-  setState(() {
-    _counter++;
-  });
+  // Tracking how many times the user has clicked the button, alongside the current counter value
+  void _incrementCounter() {
+    Aptabase.instance.trackEvent("increment", { "counter": _counter });
+    
+    setState(() {
+      _counter++;
+    });
+  }
 }
 ```
 
