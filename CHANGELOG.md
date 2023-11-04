@@ -1,3 +1,7 @@
+## 0.1.1
+
+* use new session id format
+
 ## 0.1.0
 
 * Update dependencies

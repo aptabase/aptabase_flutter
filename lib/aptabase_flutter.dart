@@ -1,12 +1,12 @@
 /// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
 library aptabase_flutter;
 
+import 'dart:math';
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'package:uuid/uuid.dart';
 
 /// Additional options for initializing the Aptabase SDK.
 class InitOptions {
@@ -19,7 +19,7 @@ class InitOptions {
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.1.0";
+  static const String _sdkVersion = "aptabase_flutter@0.1.1";
   static const Duration _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
@@ -30,11 +30,11 @@ class Aptabase {
   };
 
   static final http = newUniversalHttpClient();
-  static const uuid = Uuid();
+  static final rnd = Random();
   static SystemInfo? _sysInfo;
   static String _appKey = "";
   static Uri? _apiUrl;
-  static String _sessionId = uuid.v4();
+  static String _sessionId = newSessionId();
   static DateTime _lastTouchTs = DateTime.now().toUtc();
 
   Aptabase._();
@@ -68,7 +68,7 @@ class Aptabase {
     final now = DateTime.now().toUtc();
     final elapsed = now.difference(_lastTouchTs);
     if (elapsed > _sessionTimeout) {
-      _sessionId = uuid.v4();
+      _sessionId = newSessionId();
     }
 
     _lastTouchTs = now;
@@ -140,5 +140,13 @@ class Aptabase {
     }
 
     return Uri.parse('$baseUrl/api/v0/event');
+  }
+
+  /// Returns a new session id.
+  static String newSessionId() {
+    String epochInSeconds = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    String random = (rnd.nextInt(100000000)).toString().padLeft(8, '0');
+
+    return epochInSeconds + random;
   }
 }
