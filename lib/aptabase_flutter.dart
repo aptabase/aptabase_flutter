@@ -2,8 +2,12 @@
 library aptabase_flutter;
 
 import 'dart:math';
+import 'package:aptabase_flutter/connectivity_cheker.dart';
+import 'package:aptabase_flutter/persist_event.dart';
+import 'package:aptabase_flutter/shared_prefs.dart';
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:universal_io/io.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -11,7 +15,7 @@ import 'dart:developer' as developer;
 /// Additional options for initializing the Aptabase SDK.
 class InitOptions {
   final String? host;
-  
+
   const InitOptions({this.host});
 }
 
@@ -36,6 +40,7 @@ class Aptabase {
   static Uri? _apiUrl;
   static String _sessionId = newSessionId();
   static DateTime _lastTouchTs = DateTime.now().toUtc();
+  static SharedPreferences? _prefs;
 
   Aptabase._();
   static final instance = Aptabase._();
@@ -56,6 +61,11 @@ class Aptabase {
       developer.log(
           'This environment is not supported by Aptabase SDK. Tracking will be disabled.');
       return;
+    }
+
+    _prefs = await SharedPreferences.getInstance();
+    if (_prefs == null) {
+      developer.log('persistence not available');
     }
 
     var region = parts[1];
@@ -83,7 +93,34 @@ class Aptabase {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
+    if (await isConnected) {
+      _sendEvent(eventName, props);
+      final persistedEvents = getAllPersistedEvents(_prefs);
+      if (persistedEvents.isNotEmpty) {
+        for (final pEvent in persistedEvents) {
+          _sendEvent(pEvent.eventName, pEvent.props);
+          // delete pEvent (whether sent or not, keep it simple)
+          final isDeleted = await deleteIt(_prefs, pEvent);
+          if (isDeleted == false) {
+            developer.log('could not delete event ${pEvent.eventName}');
+          }
+        }
+      }
+    } else {
+      // prepare the event for persistence
+      final event = PersistEvent(eventName, DateTime.now(), props);
+      // persist the event
+      final isPersisted = await persistIt(_prefs, event);
+      if (isPersisted == false) {
+        developer.log('could not save event ${event.eventName}');
+      }
+    }
+  }
 
+  void _sendEvent(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) async {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
@@ -134,7 +171,8 @@ class Aptabase {
       if (opts?.host != null) {
         baseUrl = opts!.host!;
       } else {
-        developer.log('Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
+        developer.log(
+            'Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
         return null;
       }
     }
@@ -144,7 +182,8 @@ class Aptabase {
 
   /// Returns a new session id.
   static String newSessionId() {
-    String epochInSeconds = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    String epochInSeconds =
+        (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
     String random = (rnd.nextInt(100000000)).toString().padLeft(8, '0');
 
     return epochInSeconds + random;
