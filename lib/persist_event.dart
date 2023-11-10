@@ -2,30 +2,30 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-extension Handler on List<PersistEvent> {
-  List<PersistEvent> get orderAsc =>
+extension Handler on List<Event> {
+  List<Event> get orderAsc =>
       this..sort((a, b) => a.dateCreation.compareTo(b.dateCreation));
-  List<PersistEvent> get orderDesc =>
+  List<Event> get orderDesc =>
       this..sort((a, b) => b.dateCreation.compareTo(a.dateCreation));
 }
 
-class PersistEvent {
+class Event {
   final String eventName;
   final DateTime dateCreation;
   final Map<String, dynamic>? props;
-  const PersistEvent(this.eventName, this.dateCreation, [this.props]);
+  const Event(this.eventName, this.dateCreation, [this.props]);
 
   String get key => dateCreation.toIso8601String();
 
-  static final dummy = PersistEvent('test', DateTime(2000, 0, 0));
-  static final dummy2 = PersistEvent('test2', DateTime(2002, 0, 0));
+  static final dummy = Event('test', DateTime(2000, 0, 0));
+  static final dummy2 = Event('test2', DateTime(2002, 0, 0), {"counter": 1});
 
-  PersistEvent copyWith({
+  Event copyWith({
     String? eventName,
     DateTime? dateCreation,
     Map<String, dynamic>? props,
   }) {
-    return PersistEvent(
+    return Event(
       eventName ?? this.eventName,
       dateCreation ?? this.dateCreation,
       props ?? this.props,
@@ -40,8 +40,8 @@ class PersistEvent {
     };
   }
 
-  factory PersistEvent.fromMap(Map<String, dynamic> map) {
-    return PersistEvent(
+  factory Event.fromMap(Map<String, dynamic> map) {
+    return Event(
       map['eventName'] ?? '',
       DateTime.fromMillisecondsSinceEpoch(map['dateCreation']),
       map['props'] == null ? null : Map<String, dynamic>.from(map['props']),
@@ -50,8 +50,7 @@ class PersistEvent {
 
   String toJson() => json.encode(toMap());
 
-  factory PersistEvent.fromJson(String source) =>
-      PersistEvent.fromMap(json.decode(source));
+  factory Event.fromJson(String source) => Event.fromMap(json.decode(source));
 
   @override
   String toString() =>
@@ -61,7 +60,7 @@ class PersistEvent {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is PersistEvent &&
+    return other is Event &&
         other.eventName == eventName &&
         other.dateCreation == dateCreation &&
         mapEquals(other.props, props);

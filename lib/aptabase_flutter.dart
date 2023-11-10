@@ -108,7 +108,7 @@ class Aptabase {
       }
     } else {
       // prepare the event for persistence
-      final event = PersistEvent(eventName, DateTime.now(), props);
+      final event = Event(eventName, DateTime.now(), props);
       // persist the event
       final isPersisted = await persistIt(_prefs, event);
       if (isPersisted == false) {

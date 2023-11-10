@@ -6,7 +6,7 @@ bool _isAboveCeiling(SharedPreferences? prefs) =>
 
 /// will not persist events if there are already 1000 saved
 /// to avoid weighing on memory
-Future<bool> persistIt(SharedPreferences? prefs, PersistEvent pEvent) async {
+Future<bool> persistIt(SharedPreferences? prefs, Event pEvent) async {
   if (prefs == null || _isAboveCeiling(prefs)) {
     return false;
   } else {
@@ -14,7 +14,7 @@ Future<bool> persistIt(SharedPreferences? prefs, PersistEvent pEvent) async {
   }
 }
 
-Future<bool> deleteIt(SharedPreferences? prefs, PersistEvent pEvent) async {
+Future<bool> deleteIt(SharedPreferences? prefs, Event pEvent) async {
   if (prefs == null) {
     return false;
   } else {
@@ -22,8 +22,8 @@ Future<bool> deleteIt(SharedPreferences? prefs, PersistEvent pEvent) async {
   }
 }
 
-List<PersistEvent> getAllPersistedEvents(SharedPreferences? prefs) {
-  final events = <PersistEvent>[];
+List<Event> getAllPersistedEvents(SharedPreferences? prefs) {
+  final events = <Event>[];
   if (prefs == null) {
     return events;
   }
@@ -31,7 +31,7 @@ List<PersistEvent> getAllPersistedEvents(SharedPreferences? prefs) {
   for (final key in keys) {
     final eventRaw = prefs.getString(key);
     if (eventRaw != null) {
-      final event = PersistEvent.fromJson(eventRaw);
+      final event = Event.fromJson(eventRaw);
       events.add(event);
     }
   }
