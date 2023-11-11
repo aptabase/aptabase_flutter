@@ -22,9 +22,9 @@ void main() async {
     await dbStore.delete(db);
   });
 
-  test('test prevent from saving events if already 1000', () async {
+  test('test prevent from saving events if already 100', () async {
     final oneThousandEvents = List<EventOffline>.generate(
-        1000, (index) => const EventOffline('eventName'));
+        100, (index) => const EventOffline('eventName'));
     final service = TestEventService(db);
     for (final e in oneThousandEvents) {
       await service.addEvent.request(e);

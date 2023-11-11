@@ -65,6 +65,9 @@ A few important notes:
 3. You do not need to await for the `trackEvent` function, it'll run in the background.
 3. Only strings and numbers values are allowed on custom properties
 
+## about persistence
+The maximal amount of offline stored events is 100 by default. To change it, pass the desired value when instantiating AddEvent();
+
 ## Preparing for Submission to Apple App Store
 
 When submitting your app to the Apple App Store, you'll need to fill out the `App Privacy` form. You can find all the answers on our [How to fill out the Apple App Privacy when using Aptabase](https://aptabase.com/docs/apple-app-privacy) guide.
