@@ -15,10 +15,12 @@ dependencies:
   package_info_plus: ^4.0.0
   device_info_plus: ^9.0.0
   universal_io: ^2.2.0
-  # persistence
+  
+  # if no connectivity persist data
   connectivity_plus: ^4.0.2 #supports windows which is better than cross_connectivity
   internet_connection_checker: ^1.0.0+1
-  shared_preferences: ^2.2.2
+  sembast: ^3.0.2
+  
 
 dev_dependencies:
   flutter_test:

@@ -3,11 +3,11 @@ library aptabase_flutter;
 
 import 'dart:math';
 import 'package:aptabase_flutter/connectivity_cheker.dart';
-import 'package:aptabase_flutter/persist_event.dart';
-import 'package:aptabase_flutter/shared_prefs.dart';
+import 'package:aptabase_flutter/event.dart';
+import 'package:aptabase_flutter/event_service.dart';
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sembast/sembast.dart';
 import 'package:universal_io/io.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -40,7 +40,6 @@ class Aptabase {
   static Uri? _apiUrl;
   static String _sessionId = newSessionId();
   static DateTime _lastTouchTs = DateTime.now().toUtc();
-  static SharedPreferences? _prefs;
 
   Aptabase._();
   static final instance = Aptabase._();
@@ -63,11 +62,6 @@ class Aptabase {
       return;
     }
 
-    _prefs = await SharedPreferences.getInstance();
-    if (_prefs == null) {
-      developer.log('persistence not available');
-    }
-
     var region = parts[1];
     _apiUrl = _getApiUrl(region, opts);
   }
@@ -86,38 +80,51 @@ class Aptabase {
   }
 
   /// Records an event with the given name and optional properties.
-  Future<void> trackEvent(
-    String eventName, [
-    Map<String, dynamic>? props,
-  ]) async {
+  Future<void> trackEvent(String eventName,
+      [Map<String, dynamic>? props, EventsService? service]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
-    if (await isConnected) {
-      _sendEvent(eventName, props);
-      final persistedEvents = getAllPersistedEvents(_prefs);
-      if (persistedEvents.isNotEmpty) {
-        for (final pEvent in persistedEvents) {
-          _sendEvent(pEvent.eventName, pEvent.props);
-          // delete pEvent (whether sent or not, keep it simple)
-          final isDeleted = await deleteIt(_prefs, pEvent);
-          if (isDeleted == false) {
-            developer.log('could not delete event ${pEvent.eventName}');
-          }
+    if (await isConnected == false) {
+      // prepare the event for persistence
+      final event = Event(eventName, props);
+      // persist the event
+      if (service != null) {
+        final isPersisted = await service.addEvent.request(event);
+        if (isPersisted == false) {
+          developer.log('could not save event ${event.eventName}');
         }
       }
     } else {
-      // prepare the event for persistence
-      final event = Event(eventName, DateTime.now(), props);
-      // persist the event
-      final isPersisted = await persistIt(_prefs, event);
-      if (isPersisted == false) {
-        developer.log('could not save event ${event.eventName}');
+      var isDataPassingThrough = await _sendEvent(eventName, props);
+      if (service != null) {
+        // ignore: void_checks
+        final persistedEvents = await service.getAllEvents.request([]);
+        if (persistedEvents.isNotEmpty) {
+          for (var i = 0; i < persistedEvents.length; i++) {
+            if (isDataPassingThrough) {
+              final event = Event.fromMap(persistedEvents[i].value);
+              final eventKey = persistedEvents[i].key;
+              isDataPassingThrough =
+                  await _sendEvent(event.eventName, event.props);
+              if (isDataPassingThrough) {
+                isDataPassingThrough =
+                    await service.deleteEvent.request(eventKey);
+                if (isDataPassingThrough == false) {
+                  developer.log('could not delete event ${event.eventName}');
+                } else {
+                  developer
+                      .log('deleted event ${i + 1}/${persistedEvents.length}');
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
 
-  void _sendEvent(
+  Future<bool> _sendEvent(
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
@@ -156,11 +163,14 @@ class Aptabase {
         final body = await response.transform(utf8.decoder).join();
         developer.log(
             'trackEvent failed with status code ${response.statusCode}: $body');
+        return false;
       }
+      return true;
     } on Exception catch (e, st) {
       if (kDebugMode) {
         developer.log('Exception $e: $st');
       }
+      return false;
     }
   }
 
