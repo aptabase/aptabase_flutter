@@ -1,4 +1,4 @@
-import 'package:aptabase_flutter/event_service.dart';
+import 'package:aptabase_flutter/src/offline_logic/services/events_service.dart';
 import 'package:sembast/sembast.dart';
 
 class TestEventService {
@@ -6,11 +6,18 @@ class TestEventService {
   late AddEvent addEvent;
   late GetAllEvents getAllEvents;
   late DeleteEvent deleteEvent;
-  late EventsService service;
+  late EventsServiceSembast service;
+  late RemoveObsoleteLinesFromDb removeObsoleteLinesFromDb;
   TestEventService(this.db) {
     addEvent = AddEvent(db);
     getAllEvents = GetAllEvents(db);
     deleteEvent = DeleteEvent(db);
-    service = EventsService(addEvent, getAllEvents, deleteEvent);
+    removeObsoleteLinesFromDb = RemoveObsoleteLinesFromDb(db);
+    service = EventsServiceSembast(
+      addEvent,
+      getAllEvents,
+      deleteEvent,
+      removeObsoleteLinesFromDb,
+    );
   }
 }

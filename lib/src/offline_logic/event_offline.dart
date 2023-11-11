@@ -2,20 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-class Event {
+class EventOffline {
   final String eventName;
   final Map<String, dynamic>? props;
-  const Event(this.eventName, [this.props]);
+  const EventOffline(this.eventName, [this.props]);
 
-  static const dummy = Event('test');
-  static const dummy2 = Event('test2', {"counter": 1});
+  static const dummy = EventOffline('test');
+  static const dummy2 = EventOffline('test2', {"counter": 1});
 
-  Event copyWith({
+  EventOffline copyWith({
     String? eventName,
     DateTime? dateCreation,
     Map<String, dynamic>? props,
   }) {
-    return Event(
+    return EventOffline(
       eventName ?? this.eventName,
       props ?? this.props,
     );
@@ -28,8 +28,8 @@ class Event {
     };
   }
 
-  factory Event.fromMap(Map<String, dynamic> map) {
-    return Event(
+  factory EventOffline.fromMap(Map<String, dynamic> map) {
+    return EventOffline(
       map['eventName'] ?? '',
       map['props'] == null ? null : Map<String, dynamic>.from(map['props']),
     );
@@ -37,7 +37,8 @@ class Event {
 
   String toJson() => json.encode(toMap());
 
-  factory Event.fromJson(String source) => Event.fromMap(json.decode(source));
+  factory EventOffline.fromJson(String source) =>
+      EventOffline.fromMap(json.decode(source));
 
   @override
   String toString() => 'PersistEvent(eventName: $eventName, props: $props)';
@@ -46,7 +47,7 @@ class Event {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is Event &&
+    return other is EventOffline &&
         other.eventName == eventName &&
         mapEquals(other.props, props);
   }

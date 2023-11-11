@@ -1,4 +1,5 @@
-import 'package:aptabase_flutter/event_service.dart';
+import 'package:aptabase_flutter/aptabase_flutter.dart';
+import 'package:aptabase_flutter/persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sembast/sembast.dart';
@@ -34,6 +35,10 @@ class SingleServiceProvider extends StatelessWidget {
         ProxyProvider<Database, DeleteEvent>(
           update: (c, database, prev) => prev ?? DeleteEvent(database),
         ),
+        ProxyProvider<Database, RemoveObsoleteLinesFromDb>(
+          update: (c, database, prev) =>
+              prev ?? RemoveObsoleteLinesFromDb(database),
+        ),
       ],
       child: child,
     );
@@ -47,10 +52,13 @@ class AllServicesProvider extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ProxyProvider3<AddEvent, GetAllEvents, DeleteEvent, EventsService>(
-          update: (c, addEvent, getAllEvents, deleteEvent, previousService) {
+        ProxyProvider4<AddEvent, GetAllEvents, DeleteEvent,
+            RemoveObsoleteLinesFromDb, EventsServiceSembast>(
+          update: (c, addEvent, getAllEvents, deleteEvent,
+              removeObsoleteLinesFromDb, previousService) {
             return previousService ??
-                EventsService(addEvent, getAllEvents, deleteEvent);
+                EventsServiceSembast(addEvent, getAllEvents, deleteEvent,
+                    removeObsoleteLinesFromDb);
           },
         )
       ],

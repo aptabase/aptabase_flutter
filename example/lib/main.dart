@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:aptabase_flutter/aptabase_flutter.dart';
-import 'package:aptabase_flutter/event_service.dart';
-import 'package:example/matriochka.dart';
+import 'package:aptabase_flutter/persistence.dart';
+import 'package:example/matriochka_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +121,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter(EventsService eventsService) {
+  void _incrementCounter(EventsServiceSembast eventsService) {
     Aptabase.instance
         .trackEvent("increment", {"counter": _counter}, eventsService);
     setState(() {
@@ -153,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final eventsService =
-              Provider.of<EventsService>(context, listen: false);
+              Provider.of<EventsServiceSembast>(context, listen: false);
           _incrementCounter(eventsService);
         },
         tooltip: 'Increment',
