@@ -4,7 +4,7 @@
 import 'dart:math';
 import 'package:aptabase_flutter/src/offline_logic/connectivity_checker.dart';
 import 'package:aptabase_flutter/src/offline_logic/event_offline.dart';
-import 'package:aptabase_flutter/src/offline_logic/services/events_service_abstract.dart';
+import 'package:aptabase_flutter/src/offline_logic/services_asbtract/events_service_abstract.dart';
 import 'package:aptabase_flutter/src/sys_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
@@ -38,12 +38,17 @@ class Aptabase {
   static Uri? _apiUrl;
   static String _sessionId = newSessionId();
   static DateTime _lastTouchTs = DateTime.now().toUtc();
+  static EventsServiceAbstract? _service;
 
   Aptabase._();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
-  static Future init(String appKey, [InitOptions? opts]) async {
+  static Future init<E extends EventsServiceAbstract>(String appKey,
+      [InitOptions? opts, E? service]) async {
+    if (service != null) {
+      _service = service;
+    }
     _appKey = appKey;
 
     var parts = _appKey.split("-");
@@ -82,8 +87,8 @@ class Aptabase {
   /// Pass an EventsService if you want to persist unsent events.
   /// The example shows how to handle this with Sembast with EventsServiceSembast
   /// if you'd rather use another solution such as Hive or Moor submit a PR
-  Future<void> trackEvent<E extends EventsServiceAbstract>(String eventName,
-      [Map<String, dynamic>? props, E? service]) async {
+  Future<void> trackEvent<E>(String eventName,
+      [Map<String, dynamic>? props]) async {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
@@ -91,8 +96,8 @@ class Aptabase {
       // prepare the event for persistence
       final event = EventOffline(eventName, props);
       // persist the event
-      if (service != null) {
-        final isPersisted = await service.addEvent.request(event);
+      if (_service != null) {
+        final isPersisted = await _service!.addEvent.request(event);
         if (isPersisted == false) {
           developer.log('could not save event ${event.eventName}');
         }
@@ -101,8 +106,8 @@ class Aptabase {
       }
     } else {
       var isDataPassingThrough = await _sendEvent(eventName, props);
-      if (service != null) {
-        final persistedEvents = await service.getAllEvents.request([]);
+      if (_service != null) {
+        final persistedEvents = await _service!.getAllEvents.request([]);
         if (persistedEvents.isNotEmpty) {
           for (var i = 0; i < persistedEvents.length; i++) {
             if (isDataPassingThrough) {
@@ -112,7 +117,7 @@ class Aptabase {
                   await _sendEvent(event.eventName, event.props);
               if (isDataPassingThrough) {
                 isDataPassingThrough =
-                    await service.deleteEvent.request(eventKey);
+                    await _service!.deleteEvent.request(eventKey);
                 if (isDataPassingThrough == false) {
                   developer.log('could not delete event ${event.eventName}');
                 } else {
@@ -122,7 +127,7 @@ class Aptabase {
               }
             }
           }
-          await service.removeObsoleteLinesFromDb.request([]);
+          await _service!.removeObsoleteLinesFromDb.request([]);
         }
       }
     }

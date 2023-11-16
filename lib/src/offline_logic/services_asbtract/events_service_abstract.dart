@@ -1,4 +1,4 @@
-import 'package:aptabase_flutter/src/offline_logic/services/endpoint_base_abstract.dart';
+import 'package:aptabase_flutter/src/offline_logic/services_asbtract/endpoint_base_abstract.dart';
 import 'package:aptabase_flutter/src/offline_logic/event_offline.dart';
 import 'package:sembast/sembast.dart';
 

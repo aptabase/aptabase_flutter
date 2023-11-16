@@ -1,8 +1,8 @@
-import 'package:aptabase_flutter/src/offline_logic/services/events_service.dart';
+import 'package:aptabase_flutter/persistence.dart';
 import 'package:sembast/sembast.dart';
 
 class TestEventService {
-  final Database db;
+  final DbMetrics db;
   late AddEvent addEvent;
   late GetAllEvents getAllEvents;
   late DeleteEvent deleteEvent;

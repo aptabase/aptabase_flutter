@@ -13,9 +13,12 @@ import 'package:path/path.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Aptabase.init("A-DEV-0000000000");
-
-  runApp(const Directionality(
-      textDirection: TextDirection.ltr, child: EntryPointGetDirPath()));
+  runApp(
+    const Directionality(
+      textDirection: TextDirection.ltr,
+      child: EntryPointGetDirPath(),
+    ),
+  );
 }
 
 class EntryPointGetDirPath extends StatelessWidget {
@@ -51,17 +54,20 @@ class GetDb extends StatelessWidget {
   final Directory directory;
   const GetDb(this.directory, {super.key});
 
-  Future<Database> _getDb() async {
+  Future<DbMetrics> _getDb() async {
     DatabaseFactory dbFactory = databaseFactoryIo;
     final dir = await getApplicationDocumentsDirectory();
 
     final path = join(dir.path, 'do_not_delete', 'aptabase');
-    return await dbFactory.openDatabase(path, mode: DatabaseMode.create);
+    final dbSembast =
+        await dbFactory.openDatabase(path, mode: DatabaseMode.create);
+    final dbMetrics = DbMetrics(dbSembast);
+    return dbMetrics;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Database>(
+    return FutureBuilder<DbMetrics>(
         future: _getDb(),
         builder: (_, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -86,7 +92,7 @@ class GetDb extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
-  final Database db;
+  final DbMetrics db;
   const MyApp(this.db, {super.key});
 
   // This widget is the root of your application.
@@ -122,8 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter(EventsServiceSembast eventsService) {
-    Aptabase.instance
-        .trackEvent("increment", {"counter": _counter}, eventsService);
+    Aptabase.instance.trackEvent("increment", {"counter": _counter});
     setState(() {
       _counter++;
     });
@@ -131,6 +136,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final eventsService =
+        Provider.of<EventsServiceSembast>(context, listen: false);
+    Aptabase.init("A-DEV-0000000000", null, eventsService);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,

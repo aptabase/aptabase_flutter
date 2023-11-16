@@ -65,7 +65,10 @@ A few important notes:
 3. You do not need to await for the `trackEvent` function, it'll run in the background.
 3. Only strings and numbers values are allowed on custom properties
 
-## about persistence
+## About persistence
+
+Use a dedicated db to store events.
+
 The maximal amount of offline stored events is 100 by default. To change it, pass the desired value when instantiating AddEvent();
 
 ## Preparing for Submission to Apple App Store
