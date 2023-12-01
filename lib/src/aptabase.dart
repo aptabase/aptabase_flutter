@@ -31,8 +31,8 @@ class Aptabase {
     'SH': ""
   };
 
-  static final http = newUniversalHttpClient();
-  static final rnd = Random();
+  static final _http = newUniversalHttpClient();
+  static final _rnd = Random();
   static SystemInfo? _sysInfo;
   static String _appKey = "";
   static Uri? _apiUrl;
@@ -137,7 +137,7 @@ class Aptabase {
     }
   }
 
-  static int howManyLoops(int eventsCount) =>
+  static int _howManyLoops(int eventsCount) =>
       (eventsCount / _batchEventsCount).ceil();
 
   Future<List<EventsOfflineAndKeys>> _getAndGroupEvents() async {
@@ -145,23 +145,25 @@ class Aptabase {
     if (persistedEvents.isEmpty) {
       return []; // cause you know...
     } else {
-      final loops = howManyLoops(persistedEvents.length);
+      final loops = _howManyLoops(persistedEvents.length);
       final eventsOfflineAndKeys = <EventsOfflineAndKeys>[];
       for (var i = 0; i < loops; i++) {
         final eventsKeys = <int>[];
         final eventsToBeSent = <EventOffline>[];
-        for (var j = 0; j < _batchEventsCount; j++) {
-          final event = EventOffline.fromMap(persistedEvents[i].value);
-          final eventKey = persistedEvents[i].key;
 
-          eventsToBeSent.add(event);
-          eventsKeys.add(eventKey);
-          // ex : 25 events in both lists
+        for (var j = 0; j < _batchEventsCount; j++) {
+          final k = j + i * _batchEventsCount;
+          if (k < persistedEvents.length) {
+            // only add if possible
+            final event = EventOffline.fromMap(persistedEvents[k].value);
+            final eventKey = persistedEvents[k].key;
+
+            eventsToBeSent.add(event);
+            eventsKeys.add(eventKey);
+          }
         }
         final batch = EventsOfflineAndKeys(eventsToBeSent, eventsKeys);
         eventsOfflineAndKeys.add(batch);
-        eventsKeys.clear();
-        eventsToBeSent.clear();
       }
       return eventsOfflineAndKeys;
     }
@@ -179,9 +181,9 @@ class Aptabase {
       "sdkVersion": _sdkVersion,
     };
     for (final batch in batches) {
-      final isDataPassingThrough = await _sendBatch(batch, systemProps);
-      if (isDataPassingThrough) {
-        deleteOneByOne(batch.keys);
+      final isSendBatchSuccessful = await _sendBatch(batch, systemProps);
+      if (isSendBatchSuccessful) {
+        _deleteOneByOne(batch.keys);
       }
     }
     // now this is very specific to sembast
@@ -190,7 +192,7 @@ class Aptabase {
     return;
   }
 
-  Future<void> deleteOneByOne(List<int> keys) async {
+  Future<void> _deleteOneByOne(List<int> keys) async {
     for (final eventKey in keys) {
       final isBatchDeleted = await _service!.deleteEvent.request(eventKey);
       if (isBatchDeleted == false) {
@@ -204,14 +206,15 @@ class Aptabase {
     Map<String, Object> systemProps,
   ) async {
     try {
-      final request = await http.postUrl(Uri.parse('${_apiUrl!.path}s'));
+      final uriRaw = '${Uri.decodeFull('${_apiUrl!}')}s';
+      final uri = Uri.parse(uriRaw);
+      final request = await _http.postUrl(uri);
       request.headers.set("App-Key", _appKey);
       request.headers.set(
           HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
       if (!kIsWeb) {
         request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
       }
-
       final listOfEventsMap = batch.events
           .map((e) => {
                 "timestamp": DateTime.now().toUtc().toIso8601String(),
@@ -221,8 +224,7 @@ class Aptabase {
                 "props": e.props,
               })
           .toList();
-
-      final eventsJson = jsonEncode(listOfEventsMap);
+      final eventsJson = json.encode(listOfEventsMap);
       request.write(eventsJson);
       final response = await request.close();
 
@@ -244,7 +246,7 @@ class Aptabase {
   Future<bool> _sendEvent(String eventName,
       {Map<String, dynamic>? props}) async {
     try {
-      final request = await http.postUrl(_apiUrl!);
+      final request = await _http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);
       request.headers.set(
           HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
@@ -309,7 +311,7 @@ class Aptabase {
   static String newSessionId() {
     String epochInSeconds =
         (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-    String random = (rnd.nextInt(100000000)).toString().padLeft(8, '0');
+    String random = (_rnd.nextInt(100000000)).toString().padLeft(8, '0');
 
     return epochInSeconds + random;
   }
