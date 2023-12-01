@@ -17,6 +17,29 @@ class InitOptions {
   const InitOptions({this.host});
 }
 
+enum SendingStatus {
+  sendingFailedSaveAndResendLater,
+  sendingFailedDismiss,
+  sendingSuccress
+}
+
+class ResponseCodeParser {
+  final int code;
+  const ResponseCodeParser(this.code);
+  SendingStatus get sendingStatus {
+    if (code >= 300) {
+      final c = code.toString();
+      if (c.startsWith('4')) {
+        return SendingStatus.sendingFailedDismiss;
+      } else {
+        return SendingStatus.sendingFailedSaveAndResendLater;
+      }
+    } else {
+      return SendingStatus.sendingSuccress;
+    }
+  }
+}
+
 /// Aptabase Client for Flutter
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
@@ -116,18 +139,17 @@ class Aptabase {
         developer.log('no persistence event service passed, ignoring event');
       }
     } else {
-      var isDataPassingThrough = await _sendEvent(eventName, props: props);
+      final sendingStatus = await _sendEvent(eventName, props: props);
       // send all events in batches of 25 items max.
       if (_service != null) {
-        if (isDataPassingThrough == false) {
-          // it seems there was connexion but still sending event failed, so we persist event
+        if (sendingStatus == SendingStatus.sendingFailedSaveAndResendLater) {
+          // it seems there was connexion & event data is fine but still sending event failed, so we save it
           final isPersisted = await _service!.addEvent.request(event);
           if (isPersisted == false) {
             developer.log('could not save event ${event.eventName}');
           }
-        } else {
-          // Data is PassingThrough so we know the latest event was sent
-          // now might as well send the old ones lingering in the darker corners of yer db
+        } else if (sendingStatus == SendingStatus.sendingSuccress) {
+          // since the latest event was sent might as well send the old ones
           final batchesOfEventsAndKeys = await _getAndGroupEvents();
           if (batchesOfEventsAndKeys.isNotEmpty) {
             _batchSendAndThenDelete(batchesOfEventsAndKeys);
@@ -181,13 +203,12 @@ class Aptabase {
       "sdkVersion": _sdkVersion,
     };
     for (final batch in batches) {
-      final isSendBatchSuccessful = await _sendBatch(batch, systemProps);
-      if (isSendBatchSuccessful) {
+      final status = await _sendBatch(batch, systemProps);
+      if (status == SendingStatus.sendingFailedDismiss ||
+          status == SendingStatus.sendingSuccress) {
         _deleteOneByOne(batch.keys);
       }
     }
-    // now this is very specific to sembast
-    // if your persistence service does not have it just fake this service and do nuthin'
     await _service!.removeObsoleteLinesFromDb.request([]);
     return;
   }
@@ -201,7 +222,7 @@ class Aptabase {
     }
   }
 
-  Future<bool> _sendBatch(
+  Future<SendingStatus> _sendBatch(
     EventsOfflineAndKeys batch,
     Map<String, Object> systemProps,
   ) async {
@@ -232,18 +253,18 @@ class Aptabase {
         final body = await response.transform(utf8.decoder).join();
         developer.log(
             'trackEvent failed with status code ${response.statusCode}: $body');
-        return false;
       }
-      return true;
+      final parser = ResponseCodeParser(response.statusCode);
+      return parser.sendingStatus;
     } on Exception catch (e, st) {
       if (kDebugMode) {
         developer.log('Exception $e: $st');
       }
-      return false;
+      return SendingStatus.sendingFailedDismiss;
     }
   }
 
-  Future<bool> _sendEvent(String eventName,
+  Future<SendingStatus> _sendEvent(String eventName,
       {Map<String, dynamic>? props}) async {
     try {
       final request = await _http.postUrl(_apiUrl!);
@@ -280,14 +301,15 @@ class Aptabase {
         final body = await response.transform(utf8.decoder).join();
         developer.log(
             'trackEvent failed with status code ${response.statusCode}: $body');
-        return false;
       }
-      return true;
+
+      final parser = ResponseCodeParser(response.statusCode);
+      return parser.sendingStatus;
     } on Exception catch (e, st) {
       if (kDebugMode) {
         developer.log('Exception $e: $st');
       }
-      return false;
+      return SendingStatus.sendingFailedDismiss;
     }
   }
 
