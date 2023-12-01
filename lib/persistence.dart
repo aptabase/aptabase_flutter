@@ -3,4 +3,3 @@ library aptabase_persistence;
 
 export 'src/offline_logic/services/sembast.dart';
 export 'src/offline_logic/event_offline.dart';
-export 'src/offline_logic/services/sembast_wrapper.dart';
