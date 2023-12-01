@@ -1,9 +1,10 @@
 import 'package:aptabase_flutter/persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sembast/sembast.dart';
 
 class DatabaseProvider extends StatelessWidget {
-  final DbMetrics database;
+  final Database database;
   final Widget child;
   const DatabaseProvider(
       {super.key, required this.child, required this.database});
@@ -24,16 +25,16 @@ class SingleServiceProvider extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ProxyProvider<DbMetrics, AddEvent>(
+        ProxyProvider<Database, AddEvent>(
           update: (c, database, prev) => prev ?? AddEvent(database),
         ),
-        ProxyProvider<DbMetrics, GetAllEvents>(
+        ProxyProvider<Database, GetAllEvents>(
           update: (c, database, prev) => prev ?? GetAllEvents(database),
         ),
-        ProxyProvider<DbMetrics, DeleteEvent>(
+        ProxyProvider<Database, DeleteEvent>(
           update: (c, database, prev) => prev ?? DeleteEvent(database),
         ),
-        ProxyProvider<DbMetrics, RemoveObsoleteLinesFromDb>(
+        ProxyProvider<Database, RemoveObsoleteLinesFromDb>(
           update: (c, database, prev) =>
               prev ?? RemoveObsoleteLinesFromDb(database),
         ),

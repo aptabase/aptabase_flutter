@@ -2,7 +2,7 @@ import 'package:aptabase_flutter/persistence.dart';
 import 'package:sembast/sembast.dart';
 
 class TestEventService {
-  final DbMetrics db;
+  final Database db;
   late AddEvent addEvent;
   late GetAllEvents getAllEvents;
   late DeleteEvent deleteEvent;

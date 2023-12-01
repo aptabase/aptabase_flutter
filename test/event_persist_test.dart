@@ -9,7 +9,7 @@ import 'init_service.dart';
 
 void main() async {
   final dbSembast = await databaseFactoryMemory.openDatabase('test.db');
-  final db = DbMetrics(dbSembast);
+  final db = Database(dbSembast);
   test('save and get', () async {
     final dbStore = intMapStoreFactory.store('aptabase');
     await dbStore.add(db.db, EventOffline.dummy.toMap());

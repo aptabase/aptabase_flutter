@@ -54,20 +54,19 @@ class GetDb extends StatelessWidget {
   final Directory directory;
   const GetDb(this.directory, {super.key});
 
-  Future<DbMetrics> _getDb() async {
+  Future<Database> _getDb() async {
     DatabaseFactory dbFactory = databaseFactoryIo;
     final dir = await getApplicationDocumentsDirectory();
 
     final path = join(dir.path, 'do_not_delete', 'aptabase');
     final dbSembast =
         await dbFactory.openDatabase(path, mode: DatabaseMode.create);
-    final dbMetrics = DbMetrics(dbSembast);
-    return dbMetrics;
+    return dbSembast;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DbMetrics>(
+    return FutureBuilder<Database>(
         future: _getDb(),
         builder: (_, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -92,7 +91,7 @@ class GetDb extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
-  final DbMetrics db;
+  final Database db;
   const MyApp(this.db, {super.key});
 
   // This widget is the root of your application.
