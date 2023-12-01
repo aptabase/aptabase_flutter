@@ -2,6 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+class EventsOfflineAndKeys {
+  final List<EventOffline> events;
+  final List<int> keys;
+  const EventsOfflineAndKeys(this.events, this.keys);
+}
+
 class EventOffline {
   final String eventName;
   final Map<String, dynamic>? props;

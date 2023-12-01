@@ -38,17 +38,28 @@ class Aptabase {
   static Uri? _apiUrl;
   static String _sessionId = newSessionId();
   static DateTime _lastTouchTs = DateTime.now().toUtc();
+  // persistence
   static EventsServiceAbstract? _service;
+  static int _batchEventsCount = 25;
 
   Aptabase._();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
-  static Future init<E extends EventsServiceAbstract>(String appKey,
-      [InitOptions? opts, E? service]) async {
+  static Future<void> initPersistence<E extends EventsServiceAbstract>(
+      E? service,
+      {int? batchEvents}) async {
     if (service != null) {
       _service = service;
     }
+    if (batchEvents != null) {
+      _batchEventsCount = batchEvents;
+    }
+  }
+
+  /// Initializes the Aptabase SDK with the given appKey.
+
+  static Future<void> init(String appKey, [InitOptions? opts]) async {
     _appKey = appKey;
 
     var parts = _appKey.split("-");
@@ -92,9 +103,9 @@ class Aptabase {
     if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
       return;
     }
+    final event = EventOffline(eventName, props);
     if (await isConnected == false) {
       // prepare the event for persistence
-      final event = EventOffline(eventName, props);
       // persist the event
       if (_service != null) {
         final isPersisted = await _service!.addEvent.request(event);
@@ -105,38 +116,133 @@ class Aptabase {
         developer.log('no persistence event service passed, ignoring event');
       }
     } else {
-      var isDataPassingThrough = await _sendEvent(eventName, props);
+      var isDataPassingThrough = await _sendEvent(eventName, props: props);
+      // send all events in batches of 25 items max.
       if (_service != null) {
-        final persistedEvents = await _service!.getAllEvents.request([]);
-        if (persistedEvents.isNotEmpty) {
-          for (var i = 0; i < persistedEvents.length; i++) {
-            if (isDataPassingThrough) {
-              final event = EventOffline.fromMap(persistedEvents[i].value);
-              final eventKey = persistedEvents[i].key;
-              isDataPassingThrough =
-                  await _sendEvent(event.eventName, event.props);
-              if (isDataPassingThrough) {
-                isDataPassingThrough =
-                    await _service!.deleteEvent.request(eventKey);
-                if (isDataPassingThrough == false) {
-                  developer.log('could not delete event ${event.eventName}');
-                } else {
-                  developer
-                      .log('deleted event ${i + 1}/${persistedEvents.length}');
-                }
-              }
-            }
+        if (isDataPassingThrough == false) {
+          // it seems there was connexion but still sending event failed, so we persist event
+          final isPersisted = await _service!.addEvent.request(event);
+          if (isPersisted == false) {
+            developer.log('could not save event ${event.eventName}');
           }
-          await _service!.removeObsoleteLinesFromDb.request([]);
+        } else {
+          // Data is PassingThrough so we know the latest event was sent
+          // now might as well send the old ones lingering in the darker corners of yer db
+          final batchesOfEventsAndKeys = await _getAndGroupEvents();
+          if (batchesOfEventsAndKeys.isNotEmpty) {
+            _batchSendAndThenDelete(batchesOfEventsAndKeys);
+          }
         }
       }
     }
   }
 
-  Future<bool> _sendEvent(
-    String eventName, [
-    Map<String, dynamic>? props,
-  ]) async {
+  static int howManyLoops(int eventsCount) =>
+      (eventsCount / _batchEventsCount).ceil();
+
+  Future<List<EventsOfflineAndKeys>> _getAndGroupEvents() async {
+    final persistedEvents = await _service!.getAllEvents.request([]);
+    if (persistedEvents.isEmpty) {
+      return []; // cause you know...
+    } else {
+      final loops = howManyLoops(persistedEvents.length);
+      final eventsOfflineAndKeys = <EventsOfflineAndKeys>[];
+      for (var i = 0; i < loops; i++) {
+        final eventsKeys = <int>[];
+        final eventsToBeSent = <EventOffline>[];
+        for (var j = 0; j < _batchEventsCount; j++) {
+          final event = EventOffline.fromMap(persistedEvents[i].value);
+          final eventKey = persistedEvents[i].key;
+
+          eventsToBeSent.add(event);
+          eventsKeys.add(eventKey);
+          // ex : 25 events in both lists
+        }
+        final batch = EventsOfflineAndKeys(eventsToBeSent, eventsKeys);
+        eventsOfflineAndKeys.add(batch);
+        eventsKeys.clear();
+        eventsToBeSent.clear();
+      }
+      return eventsOfflineAndKeys;
+    }
+  }
+
+  Future<void> _batchSendAndThenDelete(
+      List<EventsOfflineAndKeys> batches) async {
+    final systemProps = {
+      "isDebug": kDebugMode,
+      "osName": _sysInfo!.osName,
+      "osVersion": _sysInfo!.osVersion,
+      "locale": _sysInfo!.locale,
+      "appVersion": _sysInfo!.appVersion,
+      "appBuildNumber": _sysInfo!.buildNumber,
+      "sdkVersion": _sdkVersion,
+    };
+    for (final batch in batches) {
+      final isDataPassingThrough = await _sendBatch(batch, systemProps);
+      if (isDataPassingThrough) {
+        deleteOneByOne(batch.keys);
+      }
+    }
+    // now this is very specific to sembast
+    // if your persistence service does not have it just fake this service and do nuthin'
+    await _service!.removeObsoleteLinesFromDb.request([]);
+    return;
+  }
+
+  Future<void> deleteOneByOne(List<int> keys) async {
+    for (final eventKey in keys) {
+      final isBatchDeleted = await _service!.deleteEvent.request(eventKey);
+      if (isBatchDeleted == false) {
+        developer.log('could not delete events in batch');
+      }
+    }
+  }
+
+  Future<bool> _sendBatch(
+    EventsOfflineAndKeys batch,
+    Map<String, Object> systemProps,
+  ) async {
+    try {
+      final request = await http.postUrl(Uri.parse('${_apiUrl!.path}s'));
+      request.headers.set("App-Key", _appKey);
+      request.headers.set(
+          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      if (!kIsWeb) {
+        request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
+      }
+
+      final listOfEventsMap = batch.events
+          .map((e) => {
+                "timestamp": DateTime.now().toUtc().toIso8601String(),
+                "sessionId": _evalSessionId(),
+                "eventName": e.eventName,
+                "systemProps": systemProps,
+                "props": e.props,
+              })
+          .toList();
+
+      final eventsJson = jsonEncode(listOfEventsMap);
+      request.write(eventsJson);
+      final response = await request.close();
+
+      if (kDebugMode && response.statusCode >= 300) {
+        final body = await response.transform(utf8.decoder).join();
+        developer.log(
+            'trackEvent failed with status code ${response.statusCode}: $body');
+        return false;
+      }
+      return true;
+    } on Exception catch (e, st) {
+      if (kDebugMode) {
+        developer.log('Exception $e: $st');
+      }
+      return false;
+    }
+  }
+
+  Future<bool> _sendEvent(String eventName,
+      {Map<String, dynamic>? props}) async {
     try {
       final request = await http.postUrl(_apiUrl!);
       request.headers.set("App-Key", _appKey);

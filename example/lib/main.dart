@@ -127,7 +127,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter(EventsServiceSembast eventsService) {
+  void _incrementCounter() {
     Aptabase.instance.trackEvent("increment", {"counter": _counter});
     setState(() {
       _counter++;
@@ -138,7 +138,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final eventsService =
         Provider.of<EventsServiceSembast>(context, listen: false);
-    Aptabase.init("A-DEV-0000000000", null, eventsService);
+    Aptabase.init("A-DEV-0000000000", null);
+    Aptabase.initPersistence(eventsService);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -160,9 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          final eventsService =
-              Provider.of<EventsServiceSembast>(context, listen: false);
-          _incrementCounter(eventsService);
+          _incrementCounter();
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
