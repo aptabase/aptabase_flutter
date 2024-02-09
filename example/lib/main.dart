@@ -1,57 +1,122 @@
+import 'dart:io';
+
 import 'package:aptabase_flutter/aptabase_flutter.dart';
+import 'package:aptabase_flutter/persistence.dart';
+import 'package:example/matriochka_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:sembast/sembast.dart';
+import 'package:sembast/sembast_io.dart';
+import 'package:path/path.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Aptabase.init("A-DEV-0000000000");
+  runApp(
+    const Directionality(
+      textDirection: TextDirection.ltr,
+      child: EntryPointGetDirPath(),
+    ),
+  );
+}
 
-  runApp(const MyApp());
+class EntryPointGetDirPath extends StatelessWidget {
+  const EntryPointGetDirPath({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Directory>(
+        future: getApplicationDocumentsDirectory(),
+        builder: (_, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return ColoredBox(
+                color: const Color.fromRGBO(222, 64, 122, 1),
+                child: Text('appDirectory error ${snap.error}'));
+          } else if (snap.hasError) {
+            return ColoredBox(
+                color: const Color.fromRGBO(236, 64, 122, 1),
+                child: Text('appDirectory error ${snap.error}'));
+          } else if ((snap.connectionState != ConnectionState.waiting &&
+                  !snap.hasData) ||
+              snap.data == null) {
+            return const ColoredBox(
+                color: Color.fromRGBO(244, 143, 177, 1),
+                child: Text('no appDirectory'));
+          } else {
+            return GetDb(snap.data!);
+          }
+        });
+  }
+}
+
+class GetDb extends StatelessWidget {
+  final Directory directory;
+  const GetDb(this.directory, {super.key});
+
+  Future<Database> _getDb() async {
+    DatabaseFactory dbFactory = databaseFactoryIo;
+    final dir = await getApplicationDocumentsDirectory();
+
+    final path = join(dir.path, 'do_not_delete', 'aptabase');
+    final dbSembast =
+        await dbFactory.openDatabase(path, mode: DatabaseMode.create);
+    return dbSembast;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Database>(
+        future: _getDb(),
+        builder: (_, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return ColoredBox(
+                color: const Color.fromRGBO(122, 64, 122, 1),
+                child: Text('getDb error ${snap.error}'));
+          } else if (snap.hasError) {
+            return ColoredBox(
+                color: const Color.fromRGBO(136, 64, 122, 1),
+                child: Text('getDb error ${snap.error}'));
+          } else if ((snap.connectionState != ConnectionState.waiting &&
+                  !snap.hasData) ||
+              snap.data == null) {
+            return const ColoredBox(
+                color: Color.fromRGBO(144, 143, 177, 1),
+                child: Text('no getDb'));
+          } else {
+            return MyApp(snap.data!);
+          }
+        });
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Database db;
+  const MyApp(this.db, {super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return DatabaseProvider(
+      database: db,
+      child: SingleServiceProvider(
+        child: AllServicesProvider(
+          child: MaterialApp(
+            title: 'Aptabase demo',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+            home: const MyHomePage(title: 'Flutter Demo Home Page'),
+          ),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -63,52 +128,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _incrementCounter() {
     Aptabase.instance.trackEvent("increment", {"counter": _counter});
-
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       _counter++;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final eventsService =
+        Provider.of<EventsServiceSembast>(context, listen: false);
+    Aptabase.init("A-DEV-0000000000", null);
+    Aptabase.initPersistence(eventsService);
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
@@ -122,7 +160,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () {
+          _incrementCounter();
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
