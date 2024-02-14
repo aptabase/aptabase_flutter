@@ -16,6 +16,8 @@ import "package:flutter/scheduler.dart";
 import "package:flutter/services.dart";
 import "package:universal_io/io.dart";
 
+export "package:aptabase_flutter/init_options.dart";
+
 enum _SendResult { disabled, success, discard, tryAgain }
 
 /// Aptabase Client for Flutter
