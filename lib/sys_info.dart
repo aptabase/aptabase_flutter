@@ -32,79 +32,74 @@ class SystemInfo {
   static const String _kIpadModelString = 'ipad';
 
   /// Returns the system information for the current device.
-  static Future<SystemInfo?> get() async {
-    final deviceInfo = DeviceInfoPlugin();
+  static Future<SystemInfo> get() async {
+    final osInfo = await _getOsInfo();
+
     final packageInfo = await PackageInfo.fromPlatform();
 
-    final osName = await _getOsName(deviceInfo);
-    if (osName == null) {
-      return null;
-    }
-
-    final osVersion = await _getOsVersion(deviceInfo);
-
     return SystemInfo._(
-      osName: osName,
-      osVersion: osVersion,
+      osName: osInfo.name,
+      osVersion: osInfo.version,
       locale: Platform.localeName,
       buildNumber: packageInfo.buildNumber,
       appVersion: packageInfo.version,
     );
   }
 
-  /// Returns the name of the operating system.
-  static Future<String?> _getOsName(DeviceInfoPlugin deviceInfo) async {
+  /// Returns info (name and version) of the operating system.
+  static Future<({String name, String version})> _getOsInfo() async {
     if (kIsWeb) {
-      return _kWebOsName;
-    } else if (Platform.isAndroid) {
-      return _kAndroidOsName;
-    } else if (Platform.isIOS) {
-      final info = await deviceInfo.iosInfo;
-      final iPad = info.model.toLowerCase().contains(_kIpadModelString);
-      return iPad ? _kIPadOsName : _kIPhoneOsName;
-    } else if (Platform.isMacOS) {
-      return _kMacOsName;
-    } else if (Platform.isWindows) {
-      return _kWindowsOsName;
-    } else if (Platform.isLinux) {
-      final info = await deviceInfo.linuxInfo;
-      return info.name;
+      return (name: _kWebOsName, version: _kWebOsVersion);
     }
 
-    return null;
-  }
-
-  /// Returns the version of the operating system.
-  static Future<String> _getOsVersion(DeviceInfoPlugin deviceInfo) async {
-    if (kIsWeb) {
-      return _kWebOsVersion;
-    }
+    final deviceInfo = DeviceInfoPlugin();
 
     if (Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
-      return info.version.release;
+      return (
+        name: _kAndroidOsName,
+        version: info.version.release,
+      );
     }
 
     if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
-      return info.systemVersion;
+      final isIPad = info.model.toLowerCase().contains(_kIpadModelString);
+      final osName = isIPad ? _kIPadOsName : _kIPhoneOsName;
+
+      return (name: osName, version: info.systemVersion);
     }
 
     if (Platform.isMacOS) {
       final info = await deviceInfo.macOsInfo;
-      return '${info.majorVersion}.${info.minorVersion}.${info.patchVersion}';
+      final version = '${info.majorVersion}.'
+          '${info.minorVersion}.'
+          '${info.patchVersion}';
+
+      return (name: _kMacOsName, version: version);
     }
 
     if (Platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
-      return '${info.majorVersion}.${info.minorVersion}.${info.buildNumber}';
+      final version = '${info.majorVersion}.'
+          '${info.minorVersion}.'
+          '${info.buildNumber}';
+
+      return (name: _kWindowsOsName, version: version);
     }
 
     if (Platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
-      return info.versionId ?? _kUnknownOsVersion;
+
+      return (
+        name: info.name,
+        version: info.versionId ?? _kUnknownOsVersion,
+      );
     }
 
-    return _kUnknownOsVersion;
+    return (
+      name: Platform.operatingSystem,
+      version: Platform.operatingSystemVersion,
+    );
   }
 }
