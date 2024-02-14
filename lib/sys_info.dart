@@ -1,17 +1,10 @@
-import 'package:universal_io/io.dart';
-
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import "package:device_info_plus/device_info_plus.dart";
+import "package:flutter/foundation.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:universal_io/io.dart";
 
 /// System information about the current device.
 class SystemInfo {
-  String osName;
-  String osVersion;
-  String appVersion;
-  String buildNumber;
-  String locale;
-
   SystemInfo._({
     required this.osName,
     required this.osVersion,
@@ -20,16 +13,22 @@ class SystemInfo {
     required this.appVersion,
   });
 
-  static const String _kAndroidOsName = 'Android';
-  static const String _kIPadOsName = 'iPadOS';
-  static const String _kIPhoneOsName = 'iOS';
-  static const String _kMacOsName = 'macOS';
-  static const String _kWindowsOsName = 'Windows';
-  static const String _kWebOsName = '';
-  static const String _kWebOsVersion = '';
+  String osName;
+  String osVersion;
+  String appVersion;
+  String buildNumber;
+  String locale;
 
-  static const String _kUnknownOsVersion = '';
-  static const String _kIpadModelString = 'ipad';
+  static const String _kAndroidOsName = "Android";
+  static const String _kIPadOsName = "iPadOS";
+  static const String _kIPhoneOsName = "iOS";
+  static const String _kMacOsName = "macOS";
+  static const String _kWindowsOsName = "Windows";
+  static const String _kWebOsName = "";
+  static const String _kWebOsVersion = "";
+
+  static const String _kUnknownOsVersion = "";
+  static const String _kIpadModelString = "ipad";
 
   /// Returns the system information for the current device.
   static Future<SystemInfo> get() async {
@@ -72,18 +71,18 @@ class SystemInfo {
 
     if (Platform.isMacOS) {
       final info = await deviceInfo.macOsInfo;
-      final version = '${info.majorVersion}.'
-          '${info.minorVersion}.'
-          '${info.patchVersion}';
+      final version = "${info.majorVersion}."
+          "${info.minorVersion}."
+          "${info.patchVersion}";
 
       return (name: _kMacOsName, version: version);
     }
 
     if (Platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
-      final version = '${info.majorVersion}.'
-          '${info.minorVersion}.'
-          '${info.buildNumber}';
+      final version = "${info.majorVersion}."
+          "${info.minorVersion}."
+          "${info.buildNumber}";
 
       return (name: _kWindowsOsName, version: version);
     }

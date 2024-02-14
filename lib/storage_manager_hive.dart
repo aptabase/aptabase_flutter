@@ -1,10 +1,8 @@
-library aptabase_flutter;
+import "dart:io";
 
-import 'dart:io';
-
-import 'package:aptabase_flutter/storage_manager.dart';
-import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
+import "package:aptabase_flutter/storage_manager.dart";
+import "package:flutter/foundation.dart";
+import "package:hive/hive.dart";
 
 class HiveStorage implements StorageManager {
   late final Box<String> _box;
@@ -13,7 +11,7 @@ class HiveStorage implements StorageManager {
   Future<void> init() async {
     if (!kIsWeb) Hive.init(Directory.current.path);
 
-    _box = await Hive.openBox<String>('aptabase_events');
+    _box = await Hive.openBox<String>("aptabase_events");
   }
 
   @override

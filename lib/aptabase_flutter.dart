@@ -1,8 +1,12 @@
-/// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
+/// The Flutter SDK for Aptabase, a privacy-first and
+/// simple analytics platform for apps.
 library aptabase_flutter;
 
 import "dart:async";
+import "dart:convert";
+import "dart:developer" as developer;
 import "dart:math";
+
 import "package:aptabase_flutter/init_options.dart";
 import "package:aptabase_flutter/storage_manager.dart";
 import "package:aptabase_flutter/storage_manager_hive.dart";
@@ -10,25 +14,25 @@ import "package:aptabase_flutter/sys_info.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter/services.dart";
-
 import "package:universal_io/io.dart";
-import "dart:convert";
-import "dart:developer" as developer;
 
 enum _SendResult { disabled, success, discard, tryAgain }
 
 /// Aptabase Client for Flutter
 ///
-/// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
+/// Initialize the client with `Aptabase.init(appKey)` and then
+/// use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.1.1";
+  Aptabase._();
+
+  static const _sdkVersion = "aptabase_flutter@0.1.1";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
     "EU": "https://eu.aptabase.com",
     "US": "https://us.aptabase.com",
-    'DEV': "http://localhost:3000",
-    "SH": ""
+    "DEV": "http://localhost:3000",
+    "SH": "",
   };
 
   static final _http = newUniversalHttpClient();
@@ -44,12 +48,10 @@ class Aptabase {
 
   static final _inactiveState = AppLifecycleState.inactive.toString();
   static final _pausedState = AppLifecycleState.paused.toString();
-
-  Aptabase._();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
-  static Future init(
+  static Future<void> init(
     String appKey, [
     InitOptions opts = const InitOptions(),
     StorageManager? storage,
@@ -66,9 +68,10 @@ class Aptabase {
 
     if (parts.length != 3 || _hosts[parts[1]] == null) {
       _logError(
-        "The Aptabase App Key '$_appKey' is invalid."
+        "The Aptabase App Key '$_appKey' is invalid. "
         "Tracking will be disabled.",
       );
+
       return;
     }
 
@@ -88,7 +91,7 @@ class Aptabase {
 
     SystemChannels.lifecycle.setMessageHandler(_handleLifeCycle);
 
-    _trigger("init");
+    await _trigger("init");
     _startTimer();
 
     _logInfo("Aptabase initilized!");
@@ -103,13 +106,13 @@ class Aptabase {
   static void _startTimer() {
     _timer ??= Timer.periodic(
       _initOptions.tickDuration,
-      (_) => _trigger("timer"),
+      (_) async => _trigger("timer"),
     );
   }
 
   static Future<String?> _handleLifeCycle(String? msg) async {
     if (msg == _inactiveState || msg == _pausedState) {
-      _trigger("lifecycle $msg");
+      await _trigger("lifecycle $msg");
       _dispose();
     } else {
       _startTimer();
@@ -118,7 +121,7 @@ class Aptabase {
     return msg;
   }
 
-  static Future _trigger(String reason) async {
+  static Future<void> _trigger(String reason) async {
     _logDebug("Checking events, reason: $reason");
 
     if (_isTimerRunning) {
@@ -145,7 +148,7 @@ class Aptabase {
 
         case _SendResult.success:
         case _SendResult.discard:
-          _storage.deleteAllKeys(items.map((e) => e.key));
+          await _storage.deleteAllKeys(items.map((e) => e.key));
       }
     } catch (e, s) {
       _logError("Error on send events: $e", e, s);
@@ -183,7 +186,7 @@ class Aptabase {
   }
 
   /// Records an event with the given name and optional properties.
-  void trackEvent(
+  Future<void> trackEvent(
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
@@ -277,11 +280,10 @@ class Aptabase {
 
   /// Returns a new session id.
   static String _newSessionId() {
-    final epochInSeconds =
-        (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-    final random = (_rnd.nextInt(100000000)).toString().padLeft(8, "0");
+    final epochInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final random = _rnd.nextInt(100000000).toString().padLeft(8, "0");
 
-    return epochInSeconds + random;
+    return "$epochInSeconds$random";
   }
 
   static void _logError(String msg, [Object? error, StackTrace? stackTrace]) {

@@ -1,5 +1,3 @@
-library aptabase_flutter;
-
 abstract class StorageManager {
   Future<void> init();
 
