@@ -15,6 +15,7 @@ dependencies:
   package_info_plus: ^4.0.0
   device_info_plus: ^9.0.0
   universal_io: ^2.2.0
+  hive: ^2.2.3
 
 dev_dependencies:
   flutter_test:
