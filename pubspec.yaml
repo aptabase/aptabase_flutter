@@ -16,6 +16,8 @@ dependencies:
   device_info_plus: ^9.0.0
   universal_io: ^2.2.0
   hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,9 @@
 abstract class StorageManager {
-  Future<void> init();
+  Future<void> init() async {}
 
-  Future<int> add(String item);
+  Future<Iterable<MapEntry<dynamic, String>>> getItems(int length);
 
-  Iterable<MapEntry<dynamic, String>> getItems(int length);
+  Future<void> add(String item);
 
   Future<void> deleteAllKeys(Iterable<dynamic> keys);
 }

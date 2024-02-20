@@ -5,9 +5,9 @@ library aptabase_flutter;
 import "dart:async";
 import "dart:convert";
 import "dart:developer" as developer;
-import "dart:math";
 
 import "package:aptabase_flutter/init_options.dart";
+import "package:aptabase_flutter/random_string.dart";
 import "package:aptabase_flutter/storage_manager.dart";
 import "package:aptabase_flutter/storage_manager_hive.dart";
 import "package:aptabase_flutter/sys_info.dart";
@@ -38,7 +38,7 @@ class Aptabase {
   };
 
   static final _http = newUniversalHttpClient();
-  static final _rnd = Random();
+
   static late final String _appKey;
   static late final InitOptions _initOptions;
   static late final Uri? _apiUrl;
@@ -88,12 +88,14 @@ class Aptabase {
     _logDebug("API URL is defined: $_apiUrl");
 
     _storage = storage ?? HiveStorage();
+    // OR _storage = storage ?? SharedPrefsStorage();
+
     await _storage.init();
     _logDebug("Storage initialized");
 
     SystemChannels.lifecycle.setMessageHandler(_handleLifeCycle);
 
-    await _trigger("init");
+    await _tick("init");
     _startTimer();
 
     _logInfo("Aptabase initilized!");
@@ -108,13 +110,13 @@ class Aptabase {
   static void _startTimer() {
     _timer ??= Timer.periodic(
       _initOptions.tickDuration,
-      (_) async => _trigger("timer"),
+      (_) async => _tick("timer"),
     );
   }
 
   static Future<String?> _handleLifeCycle(String? msg) async {
     if (msg == _inactiveState || msg == _pausedState) {
-      await _trigger("lifecycle $msg");
+      await _tick("lifecycle $msg");
       _dispose();
     } else {
       _startTimer();
@@ -123,7 +125,7 @@ class Aptabase {
     return msg;
   }
 
-  static Future<void> _trigger(String reason) async {
+  static Future<void> _tick(String reason) async {
     _logDebug("Checking events, reason: $reason");
 
     if (_isTimerRunning) {
@@ -134,7 +136,7 @@ class Aptabase {
     try {
       _isTimerRunning = true;
 
-      final items = _storage.getItems(_initOptions.batchLength);
+      final items = await _storage.getItems(_initOptions.batchLength);
 
       if (items.isEmpty) return;
 
@@ -166,7 +168,7 @@ class Aptabase {
     final elapsed = now.difference(_lastTouchTs);
     if (elapsed > _sessionTimeout) {
       _sessionId = _newSessionId();
-      _logDebug("New session ID was generated $_sessionId");
+      _logDebug("New session ID was generated: $_sessionId");
     }
 
     _lastTouchTs = now;
@@ -281,12 +283,7 @@ class Aptabase {
   }
 
   /// Returns a new session id.
-  static String _newSessionId() {
-    final epochInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final random = _rnd.nextInt(100000000).toString().padLeft(8, "0");
-
-    return "$epochInSeconds$random";
-  }
+  static String _newSessionId() => RandomString.randomize();
 
   static void _logError(String msg, [Object? error, StackTrace? stackTrace]) {
     developer.log(
