@@ -6,8 +6,8 @@ repository: https://github.com/aptabase/aptabase_flutter
 issue_tracker: https://github.com/aptabase/aptabase_flutter/issues
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
-  flutter: ">=1.17.0"
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
 
 dependencies:
   flutter:
@@ -17,7 +17,7 @@ dependencies:
   universal_io: ^2.2.0
   
   # if no connectivity persist data
-  connectivity_plus: ^4.0.2 #supports windows which is better than cross_connectivity
+  connectivity_plus: ^5.0.2 #4.0.2 #supports windows which is better than cross_connectivity
   internet_connection_checker: ^1.0.0+1
   sembast: ^3.0.2
   
