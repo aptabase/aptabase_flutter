@@ -11,7 +11,7 @@ import 'dart:developer' as developer;
 /// Additional options for initializing the Aptabase SDK.
 class InitOptions {
   final String? host;
-  
+
   const InitOptions({this.host});
 }
 
@@ -134,7 +134,8 @@ class Aptabase {
       if (opts?.host != null) {
         baseUrl = opts!.host!;
       } else {
-        developer.log('Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
+        developer.log(
+            'Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
         return null;
       }
     }
@@ -144,7 +145,8 @@ class Aptabase {
 
   /// Returns a new session id.
   static String newSessionId() {
-    String epochInSeconds = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    String epochInSeconds =
+        (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
     String random = (rnd.nextInt(100000000)).toString().padLeft(8, '0');
 
     return epochInSeconds + random;
