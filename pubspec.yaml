@@ -12,9 +12,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  package_info_plus: ^4.0.0
-  device_info_plus: ^9.0.0
-  universal_io: ^2.2.0
+  package_info_plus: ^4.2.0
+  device_info_plus: ^9.1.0
+  universal_io: ^2.2.2
 
 dev_dependencies:
   flutter_test:
