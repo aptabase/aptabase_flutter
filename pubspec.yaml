@@ -12,8 +12,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  package_info_plus: ^6.0.0
-  device_info_plus: ^10.0.1
+  package_info_plus: any
+  device_info_plus: any
   universal_io: ^2.2.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
