@@ -126,7 +126,7 @@ class Aptabase {
   }
 
   static Future<void> _tick(String reason) async {
-    _logDebug("Checking events, reason: $reason");
+    _logDebug("Checking events ($reason)");
 
     if (_isTimerRunning) {
       _logDebug("Already running, avoid duplication");
@@ -237,10 +237,7 @@ class Aptabase {
       request.write(events);
       final response = await request.close();
 
-      _logDebug(
-        "Sent ${events.length} "
-        "event${events.length > 1 ? "s" : ""} successfully",
-      );
+      _logDebug("Sending ${events.length} events");
 
       if (kDebugMode && response.statusCode >= 300) {
         final body = await response.transform(utf8.decoder).join();
@@ -254,6 +251,8 @@ class Aptabase {
             ? _SendResult.tryAgain
             : _SendResult.discard;
       }
+
+      _logDebug("Sent successfully");
 
       return _SendResult.success;
     } on Exception catch (e, s) {
