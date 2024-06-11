@@ -1,12 +1,13 @@
 /// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
 library aptabase_flutter;
 
+import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:math';
+
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
-import 'dart:convert';
-import 'dart:developer' as developer;
 
 /// Additional options for initializing the Aptabase SDK.
 class InitOptions {
@@ -19,7 +20,7 @@ class InitOptions {
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.2.0";
+  static const String _sdkVersion = "aptabase_flutter@0.3.0";
   static const Duration _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
