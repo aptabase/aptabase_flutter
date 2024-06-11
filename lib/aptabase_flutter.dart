@@ -1,12 +1,13 @@
 /// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
 library aptabase_flutter;
 
+import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:math';
+
 import 'package:aptabase_flutter/sys_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
-import 'dart:convert';
-import 'dart:developer' as developer;
 
 /// Additional options for initializing the Aptabase SDK.
 class InitOptions {
