@@ -19,7 +19,7 @@ class InitOptions {
 ///
 /// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.2.0";
+  static const String _sdkVersion = "aptabase_flutter@0.3.0";
   static const Duration _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
