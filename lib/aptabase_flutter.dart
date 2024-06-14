@@ -1,66 +1,165 @@
-/// The Flutter SDK for Aptabase, a privacy-first and simple analytics platform for apps.
+/// The Flutter SDK for Aptabase, a privacy-first and
+/// simple analytics platform for apps.
 library aptabase_flutter;
 
-import 'dart:convert';
-import 'dart:developer' as developer;
-import 'dart:math';
+import "dart:async";
+import "dart:convert";
+import "dart:developer" as developer;
 
-import 'package:aptabase_flutter/sys_info.dart';
-import 'package:flutter/foundation.dart';
-import 'package:universal_io/io.dart';
+import "package:aptabase_flutter/sys_info.dart";
+import "package:flutter/foundation.dart";
+import "package:universal_io/io.dart";
 
-/// Additional options for initializing the Aptabase SDK.
-class InitOptions {
-  final String? host;
+import "package:aptabase_flutter/init_options.dart";
+import "package:aptabase_flutter/random_string.dart";
+import "package:aptabase_flutter/storage_manager.dart";
+import "package:aptabase_flutter/storage_manager_hive.dart";
+import "package:flutter/scheduler.dart";
+import "package:flutter/services.dart";
 
-  const InitOptions({this.host});
-}
+export "package:aptabase_flutter/init_options.dart";
+
+enum _SendResult { disabled, success, discard, tryAgain }
 
 /// Aptabase Client for Flutter
 ///
-/// Initialize the client with `Aptabase.init(appKey)` and then use `Aptabase.instance.trackEvent(eventName, props)` to record events.
+/// Initialize the client with `Aptabase.init(appKey)` and then
+/// use `Aptabase.instance.trackEvent(eventName, props)` to record events.
 class Aptabase {
-  static const String _sdkVersion = "aptabase_flutter@0.3.0";
-  static const Duration _sessionTimeout = Duration(hours: 1);
+  Aptabase._();
+
+  static const _sdkVersion = "aptabase_flutter@0.3.0";
+  static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
-    'EU': "https://eu.aptabase.com",
-    'US': "https://us.aptabase.com",
-    'DEV': "http://localhost:3000",
-    'SH': ""
+    "EU": "https://eu.aptabase.com",
+    "US": "https://us.aptabase.com",
+    "DEV": "http://localhost:3000",
+    "SH": "",
   };
 
-  static final http = newUniversalHttpClient();
-  static final rnd = Random();
-  static SystemInfo? _sysInfo;
-  static String _appKey = "";
-  static Uri? _apiUrl;
-  static String _sessionId = newSessionId();
-  static DateTime _lastTouchTs = DateTime.now().toUtc();
+  static final _http = newUniversalHttpClient();
 
-  Aptabase._();
+  static late final String _appKey;
+  static late final InitOptions _initOptions;
+  static late final Uri? _apiUrl;
+  static var _sessionId = _newSessionId();
+  static var _lastTouchTs = DateTime.now().toUtc();
+  static Timer? _timer;
+  static var _isTimerRunning = false;
+  static late final StorageManager _storage;
+
+  static final _inactiveState = AppLifecycleState.inactive.toString();
+  static final _pausedState = AppLifecycleState.paused.toString();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
-  static Future init(String appKey, [InitOptions? opts]) async {
-    _appKey = appKey;
+  static Future<void> init(
+    String appKey, [
+    InitOptions opts = const InitOptions(),
+    StorageManager? storage,
+  ]) async {
+    final parts = appKey.split("-");
+    assert(
+      parts.length == 3,
+      "The Aptabase App Key has the pattern A-REG-0000000000",
+    );
+    assert(
+      _hosts.containsKey(parts[1]),
+      "The region part must be one of: ${_hosts.keys.join(" ")}",
+    );
 
-    var parts = _appKey.split("-");
     if (parts.length != 3 || _hosts[parts[1]] == null) {
-      developer.log(
-          'The Aptabase App Key "$_appKey" is invalid. Tracking will be disabled.');
+      _logError(
+        "The Aptabase App Key '$_appKey' is invalid. "
+        "Tracking will be disabled.",
+      );
+
       return;
     }
 
-    _sysInfo = await SystemInfo.get();
-    if (_sysInfo == null) {
-      developer.log(
-          'This environment is not supported by Aptabase SDK. Tracking will be disabled.');
-      return;
-    }
+    _appKey = appKey;
+    _initOptions = opts;
 
-    var region = parts[1];
+    final region = parts[1];
     _apiUrl = _getApiUrl(region, opts);
+
+    if (_apiUrl == null) return;
+
+    _logDebug("API URL is defined: $_apiUrl");
+
+    _storage = storage ?? HiveStorage();
+    // OR _storage = storage ?? SharedPrefsStorage();
+
+    await _storage.init();
+    _logDebug("Storage initialized");
+
+    SystemChannels.lifecycle.setMessageHandler(_handleLifeCycle);
+
+    await _tick("init");
+    _startTimer();
+
+    _logInfo("Aptabase initilized!");
+  }
+
+  static void _dispose() {
+    _timer?.cancel();
+    _timer = null;
+    _isTimerRunning = false;
+  }
+
+  static void _startTimer() {
+    _timer ??= Timer.periodic(
+      _initOptions.tickDuration,
+      (_) async => _tick("timer"),
+    );
+  }
+
+  static Future<String?> _handleLifeCycle(String? msg) async {
+    if (msg == _inactiveState || msg == _pausedState) {
+      await _tick("lifecycle $msg");
+      _dispose();
+    } else {
+      _startTimer();
+    }
+
+    return msg;
+  }
+
+  static Future<void> _tick(String reason) async {
+    _logDebug("Checking events ($reason)");
+
+    if (_isTimerRunning) {
+      _logDebug("Already running, avoid duplication");
+      return;
+    }
+
+    try {
+      _isTimerRunning = true;
+
+      final items = await _storage.getItems(_initOptions.batchLength);
+
+      if (items.isEmpty) return;
+
+      final events = items.map((e) => e.value).toList();
+      final result = await _send(events);
+
+      switch (result) {
+        case _SendResult.disabled:
+          _dispose();
+
+        case _SendResult.tryAgain:
+          break;
+
+        case _SendResult.success:
+        case _SendResult.discard:
+          await _storage.deleteAllKeys(items.map((e) => e.key));
+      }
+    } catch (e, s) {
+      _logError("Error on send events: $e", e, s);
+    } finally {
+      _isTimerRunning = false;
+    }
   }
 
   /// Returns the session id for the current session.
@@ -69,11 +168,26 @@ class Aptabase {
     final now = DateTime.now().toUtc();
     final elapsed = now.difference(_lastTouchTs);
     if (elapsed > _sessionTimeout) {
-      _sessionId = newSessionId();
+      _sessionId = _newSessionId();
+      _logDebug("New session ID was generated: $_sessionId");
     }
 
     _lastTouchTs = now;
     return _sessionId;
+  }
+
+  Future<Map<String, dynamic>> _systemProps() async {
+    final sysInfo = await SystemInfo.get();
+
+    return {
+      "isDebug": kDebugMode,
+      "osName": sysInfo.osName,
+      "osVersion": sysInfo.osVersion,
+      "locale": sysInfo.locale,
+      "appVersion": sysInfo.appVersion,
+      "appBuildNumber": sysInfo.buildNumber,
+      "sdkVersion": _sdkVersion,
+    };
   }
 
   /// Records an event with the given name and optional properties.
@@ -81,75 +195,121 @@ class Aptabase {
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
-    if (_appKey.isEmpty || _apiUrl == null || _sysInfo == null) {
+    if (_appKey.isEmpty || _apiUrl == null) {
+      _logInfo("Tracking is disabled!");
+
       return;
     }
 
+    final body = json.encode({
+      "timestamp": DateTime.now().toUtc().toIso8601String(),
+      "sessionId": _evalSessionId(),
+      "eventName": eventName,
+      "systemProps": await _systemProps(),
+      "props": props,
+    });
+
+    await _storage.add(body);
+  }
+
+  static Future<_SendResult> _send(List<String> events) async {
     try {
-      final request = await http.postUrl(_apiUrl!);
-      request.headers.set("App-Key", _appKey);
-      request.headers.set(
-          HttpHeaders.contentTypeHeader, "application/json; charset=UTF-8");
+      final apiUrl = _apiUrl;
+      if (apiUrl == null) {
+        _logInfo("Tracking is disabled!");
+
+        return _SendResult.disabled;
+      }
+
+      final request = await _http.postUrl(apiUrl);
+
+      request.followRedirects = true;
+      request.headers
+        ..set("App-Key", _appKey)
+        ..set(
+          HttpHeaders.contentTypeHeader,
+          "application/json; charset=UTF-8",
+        );
 
       if (!kIsWeb) {
         request.headers.set(HttpHeaders.userAgentHeader, _sdkVersion);
       }
 
-      final systemProps = {
-        "isDebug": kDebugMode,
-        "osName": _sysInfo!.osName,
-        "osVersion": _sysInfo!.osVersion,
-        "locale": _sysInfo!.locale,
-        "appVersion": _sysInfo!.appVersion,
-        "appBuildNumber": _sysInfo!.buildNumber,
-        "sdkVersion": _sdkVersion,
-      };
-
-      final body = json.encode({
-        "timestamp": DateTime.now().toUtc().toIso8601String(),
-        "sessionId": _evalSessionId(),
-        "eventName": eventName,
-        "systemProps": systemProps,
-        "props": props,
-      });
-
-      request.write(body);
+      request.write(events);
       final response = await request.close();
+
+      _logDebug("Sending ${events.length} events");
 
       if (kDebugMode && response.statusCode >= 300) {
         final body = await response.transform(utf8.decoder).join();
-        developer.log(
-            'trackEvent failed with status code ${response.statusCode}: $body');
+
+        _logError(
+          "TrackEvent failed with status code "
+          "${response.statusCode}. Response: $body",
+        );
+
+        return response.statusCode >= 500
+            ? _SendResult.tryAgain
+            : _SendResult.discard;
       }
-    } on Exception catch (e, st) {
-      if (kDebugMode) {
-        developer.log('Exception $e: $st');
-      }
+
+      _logDebug("Sent successfully");
+
+      return _SendResult.success;
+    } on Exception catch (e, s) {
+      _logError("TrackEvent Exception: $e", e, s);
+
+      return _SendResult.tryAgain;
     }
   }
 
   /// Returns the API URL for the given region.
-  static Uri? _getApiUrl(String region, InitOptions? opts) {
-    var baseUrl = _hosts[region]!;
+  static Uri? _getApiUrl(String region, InitOptions opts) {
+    var baseUrl = _hosts[region];
+
     if (region == "SH") {
-      if (opts?.host != null) {
-        baseUrl = opts!.host!;
+      if (opts.host != null) {
+        baseUrl = opts.host;
       } else {
-        developer.log(
-            'Host parameter must be defined when using Self-Hosted App Key. Tracking will be disabled.');
+        _logError(
+          "Host parameter must be defined when using Self-Hosted App Key. "
+          "Tracking will be disabled.",
+        );
         return null;
       }
     }
 
-    return Uri.parse('$baseUrl/api/v0/event');
+    return Uri.parse("$baseUrl/api/v0/events");
   }
 
   /// Returns a new session id.
-  static String newSessionId() {
-    String epochInSeconds =
-        (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
-    String random = (rnd.nextInt(100000000)).toString().padLeft(8, '0');
+  static String _newSessionId() => RandomString.randomize();
 
-    return epochInSeconds + random;
+  static void _logError(String msg, [Object? error, StackTrace? stackTrace]) {
+    developer.log(
+      msg,
+      name: "Aptabase",
+      level: 1000,
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  static void _logInfo(String msg) {
+    developer.log(
+      msg,
+      name: "Aptabase",
+      level: 800,
+    );
+  }
+
+  static void _logDebug(String msg) {
+    if (!_initOptions.printDebugMessages) return;
+
+    developer.log(
+      msg,
+      name: "Aptabase",
+      level: 500,
+    );
   }
 }
