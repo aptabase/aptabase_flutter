@@ -6,15 +6,16 @@ import "dart:async";
 import "dart:convert";
 import "dart:developer" as developer;
 
+import "package:aptabase_flutter/sys_info.dart";
+import "package:flutter/foundation.dart";
+import "package:universal_io/io.dart";
+
 import "package:aptabase_flutter/init_options.dart";
 import "package:aptabase_flutter/random_string.dart";
 import "package:aptabase_flutter/storage_manager.dart";
 import "package:aptabase_flutter/storage_manager_hive.dart";
-import "package:aptabase_flutter/sys_info.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/scheduler.dart";
 import "package:flutter/services.dart";
-import "package:universal_io/io.dart";
 
 export "package:aptabase_flutter/init_options.dart";
 
@@ -27,7 +28,7 @@ enum _SendResult { disabled, success, discard, tryAgain }
 class Aptabase {
   Aptabase._();
 
-  static const _sdkVersion = "aptabase_flutter@0.2.0";
+  static const _sdkVersion = "aptabase_flutter@0.3.0";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
