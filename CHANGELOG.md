@@ -1,3 +1,9 @@
+## 0.4.0
+
+* Persistant storage for offline events
+* Send events in batches
+* Retry 5xx status code
+
 ## 0.3.0
 
 * Update dependencies (breaking changes)
