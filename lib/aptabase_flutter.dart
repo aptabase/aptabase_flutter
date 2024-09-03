@@ -47,8 +47,8 @@ class Aptabase {
   static Timer? _timer;
   static var _isTimerRunning = false;
   static late final StorageManager _storage;
-
   static AppLifecycleListener? _listener;
+
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
@@ -69,7 +69,7 @@ class Aptabase {
 
     if (parts.length != 3 || _hosts[parts[1]] == null) {
       _logError(
-        "The Aptabase App Key '$_appKey' is invalid. "
+        "The Aptabase App Key '$appKey' is invalid. "
         "Tracking will be disabled.",
       );
 
@@ -87,7 +87,6 @@ class Aptabase {
     _logDebug("API URL is defined: $_apiUrl");
 
     _storage = storage ?? HiveStorage();
-    // OR _storage = storage ?? SharedPrefsStorage();
 
     await _storage.init();
     _logDebug("Storage initialized");
