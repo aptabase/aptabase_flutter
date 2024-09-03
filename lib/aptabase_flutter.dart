@@ -182,26 +182,38 @@ class Aptabase {
     };
   }
 
-  /// Records an event with the given name and optional properties.
-  Future<void> trackEvent(
+  /// Queue the event
+  Future<void> _queue(
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
-    if (_appKey.isEmpty || _apiUrl == null) {
+    try {
+      final body = json.encode({
+        "timestamp": DateTime.now().toUtc().toIso8601String(),
+        "sessionId": _evalSessionId(),
+        "eventName": eventName,
+        "systemProps": await _systemProps(),
+        "props": props,
+      });
+
+      await _storage.add(body);
+    } catch (e, s) {
+      _logError("Exception on add a new event to queue", e, s);
+    }
+  }
+
+  /// Records an event with the given name and optional properties.
+  void trackEvent(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) {
+    if (_apiUrl == null) {
       _logInfo("Tracking is disabled!");
 
       return;
     }
 
-    final body = json.encode({
-      "timestamp": DateTime.now().toUtc().toIso8601String(),
-      "sessionId": _evalSessionId(),
-      "eventName": eventName,
-      "systemProps": await _systemProps(),
-      "props": props,
-    });
-
-    await _storage.add(body);
+    _queue(eventName, props).ignore();
   }
 
   static Future<_SendResult> _send(List<String> events) async {
