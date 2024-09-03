@@ -64,11 +64,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    Aptabase.instance.trackEvent("app opened");
+    Aptabase.instance.trackEventSync("app opened");
   }
 
   void _incrementCounter() {
-    Aptabase.instance.trackEvent("increment", {"counter": _counter});
+    Aptabase.instance.trackEventSync("increment", {"counter": _counter});
 
     setState(() {
       // This call to setState tells the Flutter framework that something has

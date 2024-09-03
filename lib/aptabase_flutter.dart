@@ -182,8 +182,16 @@ class Aptabase {
     };
   }
 
+  // @Deprecated("Use the trackEventSync instead")
+  Future<void> trackEvent(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) async {
+    trackEventSync(eventName, props);
+  }
+
   /// Records an event with the given name and optional properties.
-  void trackEvent(
+  void trackEventSync(
     String eventName, [
     Map<String, dynamic>? props,
   ]) {
