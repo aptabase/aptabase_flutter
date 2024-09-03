@@ -34,9 +34,13 @@ class SystemInfo {
 
     final packageInfo = await PackageInfo.fromPlatform();
 
+    final osVersion = osInfo.version.length > 100
+        ? osInfo.version.substring(0, 100)
+        : osInfo.version;
+
     return SystemInfo._(
       osName: osInfo.name,
-      osVersion: osInfo.version.substring(0, 100),
+      osVersion: osVersion,
       locale: Platform.localeName,
       buildNumber: packageInfo.buildNumber,
       appVersion: packageInfo.version,
