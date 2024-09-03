@@ -61,6 +61,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    Aptabase.instance.trackEvent("app opened");
+  }
+
   void _incrementCounter() {
     Aptabase.instance.trackEvent("increment", {"counter": _counter});
 

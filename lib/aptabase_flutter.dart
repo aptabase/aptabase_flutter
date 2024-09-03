@@ -27,7 +27,7 @@ enum _SendResult { disabled, success, discard, tryAgain }
 class Aptabase {
   Aptabase._();
 
-  static const _sdkVersion = "aptabase_flutter@0.4.0";
+  static const _sdkVersion = "aptabase_flutter@0.4.1";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
@@ -182,8 +182,22 @@ class Aptabase {
     };
   }
 
-  /// Queue the event
-  Future<void> _queue(
+  /// Records an event with the given name and optional properties.
+  void trackEvent(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) {
+    if (_apiUrl == null) {
+      _logInfo("Tracking is disabled!");
+
+      return;
+    }
+
+    _addToQueue(eventName, props).ignore();
+  }
+
+  /// Add the event to queue with its props and handle the future
+  Future<void> _addToQueue(
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
@@ -202,20 +216,7 @@ class Aptabase {
     }
   }
 
-  /// Records an event with the given name and optional properties.
-  void trackEvent(
-    String eventName, [
-    Map<String, dynamic>? props,
-  ]) {
-    if (_apiUrl == null) {
-      _logInfo("Tracking is disabled!");
-
-      return;
-    }
-
-    _queue(eventName, props).ignore();
-  }
-
+  /// Sending the event's list using http post to server and handle the response
   static Future<_SendResult> _send(List<String> events) async {
     try {
       final apiUrl = _apiUrl;

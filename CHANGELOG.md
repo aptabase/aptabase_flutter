@@ -1,3 +1,13 @@
+## 0.4.1
+
+* Handle the lifecycle using `AppLifecycleListener` instead `SystemChannels.lifecycle.setMessageHandler`
+* Changed `trackEvent` to not future
+Avoiding calling `unawaited` every time you want to track a new event. 
+The lint rule: https://dart.dev/tools/linter-rules/unawaited_futures
+* Fix the error message when appKey is invalid
+* Update example with latest flutter version and an "app opened" event
+* Fix web info
+
 ## 0.4.0
 
 * Persistant storage for offline events
