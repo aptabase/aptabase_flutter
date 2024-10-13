@@ -18,7 +18,7 @@ Instrument your app with Aptabase, an Open Source, Privacy-First, and Simple Ana
 You can install the SDK by running the following command:
 
 ```shell
-pub add aptabase_flutter
+flutter pub add aptabase_flutter
 ```
 
 ## Android Requirements
