@@ -1,5 +1,5 @@
 import 'package:aptabase_flutter/aptabase_flutter.dart';
-import 'package:aptabase_flutter/storage_manager_shared_prefs.dart';
+import 'package:example/storage_manager_shared_prefs.dart';
 import 'package:flutter/material.dart';
 
 void main() async {

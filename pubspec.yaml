@@ -17,7 +17,6 @@ dependencies:
   universal_io: ^2.2.2
   hive_ce: ^2.7.0
   hive_ce_flutter: ^2.1.0
-  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
