@@ -1,6 +1,6 @@
 /// The Flutter SDK for Aptabase, a privacy-first and
 /// simple analytics platform for apps.
-library aptabase_flutter;
+library;
 
 import "dart:async";
 import "dart:convert";
@@ -145,7 +145,7 @@ class Aptabase {
 
         case _SendResult.success:
         case _SendResult.discard:
-          await _storage.deleteAllKeys(items.map((e) => e.key));
+          await _storage.deleteEvents(items.map((e) => e.key).toSet());
       }
     } catch (e, s) {
       _logError("Error on send events: $e", e, s);
@@ -210,15 +210,19 @@ class Aptabase {
     Map<String, dynamic>? props,
   ]) async {
     try {
+      final time = DateTime.now().toUtc();
+
       final body = json.encode({
-        "timestamp": DateTime.now().toUtc().toIso8601String(),
+        "timestamp": time.toIso8601String(),
         "sessionId": _evalSessionId(),
         "eventName": eventName,
         "systemProps": await _systemProps(),
         "props": props,
       });
 
-      await _storage.add(body);
+      final key = "aptabase_${time.millisecondsSinceEpoch}_$eventName";
+
+      await _storage.addEvent(key, body);
     } catch (e, s) {
       _logError("Exception on add a new event to queue", e, s);
     }
