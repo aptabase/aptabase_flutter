@@ -128,7 +128,7 @@ packages:
     source: sdk
     version: "0.0.0"
   hive_ce:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: hive_ce
       sha256: "5ca75422fcefe378d4d152744808eb6b562dca942300264633fb75b9d4a18354"
@@ -136,7 +136,7 @@ packages:
     source: hosted
     version: "2.7.0"
   hive_ce_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: hive_ce_flutter
       sha256: e74e11d3ed622630ff1ee758037dab21a59d2182fa7b61378726c673742d2ab9
@@ -243,10 +243,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider
-      sha256: fec0d61223fba3154d87759e3cc27fe2c8dc498f6386c6d6fc80d1afdd1bf378
+      sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.4"
+    version: "2.1.5"
   path_provider_android:
     dependency: transitive
     description:
@@ -304,7 +304,7 @@ packages:
     source: hosted
     version: "2.1.8"
   shared_preferences:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: shared_preferences
       sha256: "746e5369a43170c25816cc472ee016d3a66bc13fcf430c0bc41ad7b4b2922051"

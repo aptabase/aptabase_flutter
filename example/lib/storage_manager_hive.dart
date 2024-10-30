@@ -2,7 +2,7 @@ import "package:aptabase_flutter/storage_manager.dart";
 
 import "package:hive_ce_flutter/hive_flutter.dart";
 
-class HiveStorage implements StorageManager {
+class StorageManagerHive implements StorageManager {
   late final Box<MapEntry<String, String>> _box;
 
   @override
