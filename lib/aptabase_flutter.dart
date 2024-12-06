@@ -1,21 +1,20 @@
 /// The Flutter SDK for Aptabase, a privacy-first and
 /// simple analytics platform for apps.
-library aptabase_flutter;
+library;
 
 import "dart:async";
 import "dart:convert";
 import "dart:developer" as developer;
 
+import "package:aptabase_flutter/storage_manager_shared_prefs.dart";
 import "package:aptabase_flutter/sys_info.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/widgets.dart";
 import "package:universal_io/io.dart";
 
 import "package:aptabase_flutter/init_options.dart";
 import "package:aptabase_flutter/random_string.dart";
 import "package:aptabase_flutter/storage_manager.dart";
-import "package:aptabase_flutter/storage_manager_hive.dart";
-import "package:flutter/scheduler.dart";
-import "package:flutter/services.dart";
 
 export "package:aptabase_flutter/init_options.dart";
 
@@ -28,7 +27,7 @@ enum _SendResult { disabled, success, discard, tryAgain }
 class Aptabase {
   Aptabase._();
 
-  static const _sdkVersion = "aptabase_flutter@0.4.0";
+  static const _sdkVersion = "aptabase_flutter@0.4.1";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
@@ -48,9 +47,8 @@ class Aptabase {
   static Timer? _timer;
   static var _isTimerRunning = false;
   static late final StorageManager _storage;
+  static AppLifecycleListener? _listener;
 
-  static final _inactiveState = AppLifecycleState.inactive.toString();
-  static final _pausedState = AppLifecycleState.paused.toString();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
@@ -71,7 +69,7 @@ class Aptabase {
 
     if (parts.length != 3 || _hosts[parts[1]] == null) {
       _logError(
-        "The Aptabase App Key '$_appKey' is invalid. "
+        "The Aptabase App Key '$appKey' is invalid. "
         "Tracking will be disabled.",
       );
 
@@ -88,13 +86,15 @@ class Aptabase {
 
     _logDebug("API URL is defined: $_apiUrl");
 
-    _storage = storage ?? HiveStorage();
-    // OR _storage = storage ?? SharedPrefsStorage();
+    _storage = storage ?? StorageManagerSharedPrefs();
 
     await _storage.init();
     _logDebug("Storage initialized");
 
-    SystemChannels.lifecycle.setMessageHandler(_handleLifeCycle);
+    _listener = AppLifecycleListener(
+      onInactive: () => _tick("lifecycle onInactive"),
+      onResume: _startTimer,
+    );
 
     await _tick("init");
     _startTimer();
@@ -106,6 +106,9 @@ class Aptabase {
     _timer?.cancel();
     _timer = null;
     _isTimerRunning = false;
+
+    _listener?.dispose();
+    _listener = null;
   }
 
   static void _startTimer() {
@@ -113,17 +116,6 @@ class Aptabase {
       _initOptions.tickDuration,
       (_) async => _tick("timer"),
     );
-  }
-
-  static Future<String?> _handleLifeCycle(String? msg) async {
-    if (msg == _inactiveState || msg == _pausedState) {
-      await _tick("lifecycle $msg");
-      _dispose();
-    } else {
-      _startTimer();
-    }
-
-    return msg;
   }
 
   static Future<void> _tick(String reason) async {
@@ -153,7 +145,7 @@ class Aptabase {
 
         case _SendResult.success:
         case _SendResult.discard:
-          await _storage.deleteAllKeys(items.map((e) => e.key));
+          await _storage.deleteEvents(items.map((e) => e.key).toSet());
       }
     } catch (e, s) {
       _logError("Error on send events: $e", e, s);
@@ -190,28 +182,53 @@ class Aptabase {
     };
   }
 
-  /// Records an event with the given name and optional properties.
+  // @Deprecated("Use the trackEventSync instead")
   Future<void> trackEvent(
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
-    if (_appKey.isEmpty || _apiUrl == null) {
+    trackEventSync(eventName, props);
+  }
+
+  /// Records an event with the given name and optional properties.
+  void trackEventSync(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) {
+    if (_apiUrl == null) {
       _logInfo("Tracking is disabled!");
 
       return;
     }
 
-    final body = json.encode({
-      "timestamp": DateTime.now().toUtc().toIso8601String(),
-      "sessionId": _evalSessionId(),
-      "eventName": eventName,
-      "systemProps": await _systemProps(),
-      "props": props,
-    });
-
-    await _storage.add(body);
+    _addToQueue(eventName, props).ignore();
   }
 
+  /// Add the event to queue with its props and handle the future
+  Future<void> _addToQueue(
+    String eventName, [
+    Map<String, dynamic>? props,
+  ]) async {
+    try {
+      final time = DateTime.now().toUtc();
+
+      final body = json.encode({
+        "timestamp": time.toIso8601String(),
+        "sessionId": _evalSessionId(),
+        "eventName": eventName,
+        "systemProps": await _systemProps(),
+        "props": props,
+      });
+
+      final key = "aptabase_${time.millisecondsSinceEpoch}_$eventName";
+
+      await _storage.addEvent(key, body);
+    } catch (e, s) {
+      _logError("Exception on add a new event to queue", e, s);
+    }
+  }
+
+  /// Sending the event's list using http post to server and handle the response
   static Future<_SendResult> _send(List<String> events) async {
     try {
       final apiUrl = _apiUrl;

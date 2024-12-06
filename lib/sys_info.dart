@@ -24,8 +24,6 @@ class SystemInfo {
   static const String _kIPhoneOsName = "iOS";
   static const String _kMacOsName = "macOS";
   static const String _kWindowsOsName = "Windows";
-  static const String _kWebOsName = "";
-  static const String _kWebOsVersion = "";
 
   static const String _kUnknownOsVersion = "";
   static const String _kIpadModelString = "ipad";
@@ -36,9 +34,13 @@ class SystemInfo {
 
     final packageInfo = await PackageInfo.fromPlatform();
 
+    final osVersion = osInfo.version.length > 100
+        ? osInfo.version.substring(0, 100)
+        : osInfo.version;
+
     return SystemInfo._(
       osName: osInfo.name,
-      osVersion: osInfo.version,
+      osVersion: osVersion,
       locale: Platform.localeName,
       buildNumber: packageInfo.buildNumber,
       appVersion: packageInfo.version,
@@ -47,11 +49,16 @@ class SystemInfo {
 
   /// Returns info (name and version) of the operating system.
   static Future<({String name, String version})> _getOsInfo() async {
-    if (kIsWeb) {
-      return (name: _kWebOsName, version: _kWebOsVersion);
-    }
-
     final deviceInfo = DeviceInfoPlugin();
+
+    if (kIsWeb) {
+      final info = await deviceInfo.webBrowserInfo;
+
+      return (
+        name: info.browserName.name,
+        version: info.appVersion ?? "",
+      );
+    }
 
     if (Platform.isAndroid) {
       final info = await deviceInfo.androidInfo;

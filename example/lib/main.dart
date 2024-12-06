@@ -1,9 +1,19 @@
 import 'package:aptabase_flutter/aptabase_flutter.dart';
+import 'package:example/storage_manager_hive.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Aptabase.init("A-DEV-0000000000");
+
+  // Simple init:
+  // await Aptabase.init("A-DEV-0000000000");
+
+  // If you want to use Hive, an example:
+  await Aptabase.init(
+    "A-DEV-0000000000",
+    const InitOptions(),
+    StorageManagerHive(),
+  );
 
   runApp(const MyApp());
 }
@@ -61,8 +71,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    Aptabase.instance.trackEventSync("app opened");
+  }
+
   void _incrementCounter() {
-    Aptabase.instance.trackEvent("increment", {"counter": _counter});
+    Aptabase.instance.trackEventSync("increment", {"counter": _counter});
 
     setState(() {
       // This call to setState tells the Flutter framework that something has
