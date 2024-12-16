@@ -71,7 +71,7 @@ class Aptabase {
 
     if (parts.length != 3 || _hosts[parts[1]] == null) {
       _logError(
-        "The Aptabase App Key '$_appKey' is invalid. "
+        "The Aptabase App Key '$appKey' is invalid. "
         "Tracking will be disabled.",
       );
 
