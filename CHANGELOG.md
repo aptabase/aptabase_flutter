@@ -1,3 +1,9 @@
+## 0.4.1
+
+* Change "SystemChannels.lifecycle" to "AppLifecycleListener"
+* Fix browser info OS
+* Fix invalid appKey message
+
 ## 0.4.0
 
 * Persistant storage for offline events
