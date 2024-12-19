@@ -1,9 +1,19 @@
 import 'package:aptabase_flutter/aptabase_flutter.dart';
+import 'package:example/storage_manager_hive.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Aptabase.init("A-DEV-0000000000");
+
+  // Simple init:
+  // await Aptabase.init("A-DEV-0000000000");
+
+  // If you want to use Hive, an example:
+  await Aptabase.init(
+    "A-DEV-0000000000",
+    const InitOptions(),
+    StorageManagerHive(),
+  );
 
   runApp(const MyApp());
 }

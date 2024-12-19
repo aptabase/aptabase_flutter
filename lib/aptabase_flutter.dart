@@ -6,6 +6,7 @@ import "dart:async";
 import "dart:convert";
 import "dart:developer" as developer;
 
+import "package:aptabase_flutter/storage_manager_shared_prefs.dart";
 import "package:aptabase_flutter/sys_info.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/widgets.dart";
@@ -14,7 +15,6 @@ import "package:universal_io/io.dart";
 import "package:aptabase_flutter/init_options.dart";
 import "package:aptabase_flutter/random_string.dart";
 import "package:aptabase_flutter/storage_manager.dart";
-import "package:aptabase_flutter/storage_manager_hive.dart";
 
 export "package:aptabase_flutter/init_options.dart";
 
@@ -86,8 +86,7 @@ class Aptabase {
 
     _logDebug("API URL is defined: $_apiUrl");
 
-    _storage = storage ?? HiveStorage();
-    // OR _storage = storage ?? SharedPrefsStorage();
+    _storage = storage ?? StorageManagerSharedPrefs();
 
     await _storage.init();
     _logDebug("Storage initialized");
@@ -146,7 +145,7 @@ class Aptabase {
 
         case _SendResult.success:
         case _SendResult.discard:
-          await _storage.deleteAllKeys(items.map((e) => e.key));
+          await _storage.deleteEvents(items.map((e) => e.key).toSet());
       }
     } catch (e, s) {
       _logError("Error on send events: $e", e, s);
@@ -194,15 +193,19 @@ class Aptabase {
       return;
     }
 
+    final time = DateTime.now().toUtc();
+
     final body = json.encode({
-      "timestamp": DateTime.now().toUtc().toIso8601String(),
+      "timestamp": time.toIso8601String(),
       "sessionId": _evalSessionId(),
       "eventName": eventName,
       "systemProps": await _systemProps(),
       "props": props,
     });
 
-    await _storage.add(body);
+    final key = "aptabase_${time.millisecondsSinceEpoch}_$eventName";
+
+    await _storage.addEvent(key, body);
   }
 
   static Future<_SendResult> _send(List<String> events) async {
