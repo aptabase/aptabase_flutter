@@ -9,13 +9,12 @@ import "dart:developer" as developer;
 import "package:aptabase_flutter/storage_manager_shared_prefs.dart";
 import "package:aptabase_flutter/sys_info.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/widgets.dart";
 import "package:universal_io/io.dart";
 
 import "package:aptabase_flutter/init_options.dart";
 import "package:aptabase_flutter/random_string.dart";
 import "package:aptabase_flutter/storage_manager.dart";
-import "package:flutter/scheduler.dart";
-import "package:flutter/services.dart";
 
 export "package:aptabase_flutter/init_options.dart";
 
@@ -28,7 +27,7 @@ enum _SendResult { disabled, success, discard, tryAgain }
 class Aptabase {
   Aptabase._();
 
-  static const _sdkVersion = "aptabase_flutter@0.4.0";
+  static const _sdkVersion = "aptabase_flutter@0.4.1";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
@@ -48,9 +47,8 @@ class Aptabase {
   static Timer? _timer;
   static var _isTimerRunning = false;
   static late final StorageManager _storage;
+  static AppLifecycleListener? _listener;
 
-  static final _inactiveState = AppLifecycleState.inactive.toString();
-  static final _pausedState = AppLifecycleState.paused.toString();
   static final instance = Aptabase._();
 
   /// Initializes the Aptabase SDK with the given appKey.
@@ -71,7 +69,7 @@ class Aptabase {
 
     if (parts.length != 3 || _hosts[parts[1]] == null) {
       _logError(
-        "The Aptabase App Key '$_appKey' is invalid. "
+        "The Aptabase App Key '$appKey' is invalid. "
         "Tracking will be disabled.",
       );
 
@@ -93,7 +91,10 @@ class Aptabase {
     await _storage.init();
     _logDebug("Storage initialized");
 
-    SystemChannels.lifecycle.setMessageHandler(_handleLifeCycle);
+    _listener = AppLifecycleListener(
+      onInactive: () => _tick("lifecycle onInactive"),
+      onResume: _startTimer,
+    );
 
     await _tick("init");
     _startTimer();
@@ -105,6 +106,9 @@ class Aptabase {
     _timer?.cancel();
     _timer = null;
     _isTimerRunning = false;
+
+    _listener?.dispose();
+    _listener = null;
   }
 
   static void _startTimer() {
@@ -112,17 +116,6 @@ class Aptabase {
       _initOptions.tickDuration,
       (_) async => _tick("timer"),
     );
-  }
-
-  static Future<String?> _handleLifeCycle(String? msg) async {
-    if (msg == _inactiveState || msg == _pausedState) {
-      await _tick("lifecycle $msg");
-      _dispose();
-    } else {
-      _startTimer();
-    }
-
-    return msg;
   }
 
   static Future<void> _tick(String reason) async {
