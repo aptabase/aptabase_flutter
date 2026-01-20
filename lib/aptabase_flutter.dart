@@ -203,7 +203,7 @@ class Aptabase {
       "props": props,
     });
 
-    final key = "aptabase_${time.millisecondsSinceEpoch}_$eventName";
+    final key = "${time.millisecondsSinceEpoch}_$eventName";
 
     await _storage.addEvent(key, body);
   }
