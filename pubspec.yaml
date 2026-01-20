@@ -1,6 +1,6 @@
 name: aptabase_flutter
 description: "Flutter SDK for Aptabase: Open Source Privacy-First and Simple Analytics for Mobile, Desktop and Web Apps"
-version: 0.4.1
+version: 0.4.2
 homepage: https://aptabase.com
 repository: https://github.com/aptabase/aptabase_flutter
 issue_tracker: https://github.com/aptabase/aptabase_flutter/issues
@@ -12,12 +12,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  package_info_plus: ^8.0.0
-  device_info_plus: ^10.1.0
-  universal_io: ^2.2.2
-  shared_preferences: ^2.3.3
+  package_info_plus: any
+  device_info_plus: any
+  universal_io: any
+  shared_preferences: any
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0

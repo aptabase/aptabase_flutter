@@ -27,7 +27,7 @@ enum _SendResult { disabled, success, discard, tryAgain }
 class Aptabase {
   Aptabase._();
 
-  static const _sdkVersion = "aptabase_flutter@0.4.1";
+  static const _sdkVersion = "aptabase_flutter@0.4.2";
   static const _sessionTimeout = Duration(hours: 1);
 
   static const Map<String, String> _hosts = {
@@ -39,9 +39,9 @@ class Aptabase {
 
   static final _http = newUniversalHttpClient();
 
-  static late final String _appKey;
+  static String? _appKey;
+  static Uri? _apiUrl;
   static late final InitOptions _initOptions;
-  static late final Uri? _apiUrl;
   static var _sessionId = _newSessionId();
   static var _lastTouchTs = DateTime.now().toUtc();
   static Timer? _timer;
@@ -187,7 +187,8 @@ class Aptabase {
     String eventName, [
     Map<String, dynamic>? props,
   ]) async {
-    if (_appKey.isEmpty || _apiUrl == null) {
+    final appKey = _appKey;
+    if (_apiUrl == null || appKey == null || appKey.isEmpty) {
       _logInfo("Tracking is disabled!");
 
       return;
@@ -211,7 +212,8 @@ class Aptabase {
   static Future<_SendResult> _send(List<String> events) async {
     try {
       final apiUrl = _apiUrl;
-      if (apiUrl == null) {
+      final appKey = _appKey;
+      if (apiUrl == null || appKey == null) {
         _logInfo("Tracking is disabled!");
 
         return _SendResult.disabled;
@@ -221,7 +223,7 @@ class Aptabase {
 
       request.followRedirects = true;
       request.headers
-        ..set("App-Key", _appKey)
+        ..set("App-Key", appKey)
         ..set(
           HttpHeaders.contentTypeHeader,
           "application/json; charset=UTF-8",
