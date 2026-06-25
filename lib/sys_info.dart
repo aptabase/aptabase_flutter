@@ -48,9 +48,21 @@ class SystemInfo {
   }
 
   /// Returns info (name and version) of the operating system.
-  static Future<({String name, String version})> _getOsInfo() async {
-    final deviceInfo = DeviceInfoPlugin();
+  static Future<({String name, String version})> _getOsInfo({
+    Future<({String name, String version})> Function(DeviceInfoPlugin)?
+        resolveOsInfo,
+    ({String name, String version}) Function()? fallbackOsInfo,
+  }) async {
+    try {
+      return await (resolveOsInfo ?? _resolveOsInfo)(DeviceInfoPlugin());
+    } catch (_) {
+      return (fallbackOsInfo ?? _platformFallbackOsInfo)();
+    }
+  }
 
+  static Future<({String name, String version})> _resolveOsInfo(
+    DeviceInfoPlugin deviceInfo,
+  ) async {
     if (kIsWeb) {
       final info = await deviceInfo.webBrowserInfo;
 
@@ -106,6 +118,41 @@ class SystemInfo {
     return (
       name: Platform.operatingSystem,
       version: Platform.operatingSystemVersion,
+    );
+  }
+
+  static ({String name, String version}) _platformFallbackOsInfo() {
+    if (Platform.isAndroid) {
+      return (name: _kAndroidOsName, version: Platform.operatingSystemVersion);
+    }
+
+    if (Platform.isIOS) {
+      return (name: _kIPhoneOsName, version: Platform.operatingSystemVersion);
+    }
+
+    if (Platform.isMacOS) {
+      return (name: _kMacOsName, version: Platform.operatingSystemVersion);
+    }
+
+    if (Platform.isWindows) {
+      return (name: _kWindowsOsName, version: Platform.operatingSystemVersion);
+    }
+
+    return (
+      name: Platform.operatingSystem,
+      version: Platform.operatingSystemVersion,
+    );
+  }
+
+  @visibleForTesting
+  static Future<({String name, String version})> getOsInfoForTesting({
+    Future<({String name, String version})> Function(DeviceInfoPlugin)?
+        resolveOsInfo,
+    ({String name, String version}) Function()? fallbackOsInfo,
+  }) {
+    return _getOsInfo(
+      resolveOsInfo: resolveOsInfo,
+      fallbackOsInfo: fallbackOsInfo,
     );
   }
 }

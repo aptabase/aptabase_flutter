@@ -1,3 +1,9 @@
+## Unreleased
+
+* Update `device_info_plus` and `package_info_plus` to the minimum versions with iOS/macOS Swift Package Manager support.
+* Fall back to platform OS metadata when device metadata collection fails.
+* Ignore non-Aptabase SharedPreferences entries when loading queued events.
+
 ## 0.4.1
 
 * Change "SystemChannels.lifecycle" to "AppLifecycleListener"
