@@ -5,6 +5,7 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:aptabase_flutter/aptabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +13,10 @@ import 'package:example/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // A self-hosted key without a host disables tracking, so trackEvent
+    // becomes a no-op: no storage, timers or network in the test.
+    await Aptabase.init('A-SH-0000000000');
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
