@@ -1,8 +1,10 @@
-## Unreleased
+## 0.5.0
 
-* Update `device_info_plus` and `package_info_plus` to the minimum versions with iOS/macOS Swift Package Manager support.
-* Fall back to platform OS metadata when device metadata collection fails.
-* Ignore non-Aptabase SharedPreferences entries when loading queued events.
+* Update `device_info_plus` (11.1.1 up to 13.x) and `package_info_plus` (8.3.1 up to 10.x) with iOS/macOS Swift Package Manager support
+* Raise minimum supported versions to Dart 3.4 / Flutter 3.22
+* Fall back to platform OS metadata when device metadata collection fails
+* Ignore non-Aptabase SharedPreferences entries when loading queued events
+* Migrate example app to Swift Package Manager
 
 ## 0.4.1
 
